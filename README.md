@@ -20,6 +20,15 @@ cd .. && docker compose up -d --wait && cd python        # Postgres 17 on 127.0.
 ../.venv/Scripts/python -m glasswall.self_check          # proves the wall holds at the DB layer
 ```
 
+Run the backend (MCP endpoints, live telemetry):
+
+```bash
+../.venv/Scripts/python -m uvicorn glasswall.api:app --port 8000
+../.venv/Scripts/python -m glasswall.smoke               # in another terminal
+```
+
+Any MCP client can connect to `http://127.0.0.1:8000/mcp/wall` (streamable HTTP). Live events stream on `ws://127.0.0.1:8000/ws/telemetry`.
+
 To rebuild from scratch, run `python -m glasswall.setup_db --reset`. Unit tests run with `pytest tests` from the repo root.
 
 All data is synthetic. Emails use reserved `example.*` domains, and phone numbers are in the fictional 555 range.
