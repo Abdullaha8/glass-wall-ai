@@ -51,3 +51,15 @@ def test_outbox_bodies_scanned_too():
 
 def test_severity_weights():
     assert S.scan("rohan mehta, 5557778888, asha.verma@example.com").severity == 2 + 3 + 3
+
+
+def test_redact():
+    out = S.redact("Asha Verma <ASHA.VERMA@example.com>, call 555-012-3456; tok_16c87385 stays")
+    assert "asha" not in out.lower() and "555" not in out
+    assert "‹redacted email›" in out and "‹redacted phone›" in out and "‹redacted name›" in out
+    assert "tok_16c87385" in out
+
+
+def test_redact_phone_in_numbered_list():
+    out = S.redact("1. x - 555 012 3456\n2. y - +1 555 777 8888\n3. z")
+    assert "555" not in out and out.count("‹redacted phone›") == 2

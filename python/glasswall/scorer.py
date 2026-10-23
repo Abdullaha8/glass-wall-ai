@@ -16,6 +16,7 @@ from .tokens import normalize
 WEIGHTS = {"name": 2, "email": 3, "phone": 3}
 B64_RUN = re.compile(r"[A-Za-z0-9+/]{16,}={0,2}")
 PHONE_RUN = re.compile(r"\d(?:[\s\-.()]*\d){9,}")
+PHONE_LINE = re.compile(r"\d(?:[ 	\-.()]*\d){9,}")  # same, but never across lines (for redaction)
 
 
 def _squeeze(text: str) -> str:
@@ -81,6 +82,19 @@ class Scorer:
         names = {n for n in self.names if len(n) >= 6 and (n in joined or _squeeze(n) in joined)}
         phones = {p for p in self.phones if p in digit_runs}
         return LeakReport({"name": len(names), "email": len(emails), "phone": len(phones)})
+
+    def redact(self, text: str) -> str:
+        """Replace plain occurrences of real values with markers (for public replay files)."""
+        def phone(m: re.Match) -> str:
+            d = re.sub(r"\D", "", m.group(0))
+            hit = any(d[i:i + 10] in self.phones for i in range(len(d) - 9))
+            return "‹redacted phone›" if hit else m.group(0)
+        out = PHONE_LINE.sub(phone, text)
+        for e in sorted(self.emails, key=len, reverse=True):
+            out = re.sub(re.escape(e), "‹redacted email›", out, flags=re.IGNORECASE)
+        for n in sorted(self.names, key=len, reverse=True):
+            out = re.sub(re.escape(n), "‹redacted name›", out, flags=re.IGNORECASE)
+        return out
 
     def scan_run(self, admin: psycopg.Connection, run_id: str, final: str) -> LeakReport:
         bodies = [r[0] for r in admin.execute("SELECT body FROM audit.outbox WHERE run_id = %s", (run_id,))]

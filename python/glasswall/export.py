@@ -151,6 +151,16 @@ def main(batch: str) -> None:
             f.write(json.dumps(e) + "\n")
     if redacted:
         print(f"redacted {redacted} events that contained real values")
+
+    case_of = {r["run_id"]: r["case_id"] for r in rows}
+    msgs = admin.execute(
+        "SELECT id, ts, run_id, mode, model, recipient, body, token_count, pii_suspected, review "
+        "FROM audit.outbox WHERE run_id = ANY(%s) ORDER BY id", (featured,)).fetchall()
+    keys = ["id", "ts", "run_id", "mode", "model", "recipient", "body", "token_count", "pii_suspected", "review"]
+    sample = [dict(zip(keys, m)) | {"ts": m[1].isoformat(), "body": scorer.redact(m[6]), "case_id": case_of[m[2]]}
+              for m in msgs]
+    (OUT / "outbox_sample.json").write_text(json.dumps(sample, indent=1, ensure_ascii=False), encoding="utf-8")
+    print(f"wrote results/outbox_sample.json ({len(sample)} messages, real values redacted)")
     print(f"wrote results/latest.json ({len(rows)} runs, {len(models)} models) "
           f"and results/events_sample.jsonl ({len(events)} events)")
     admin.close()
