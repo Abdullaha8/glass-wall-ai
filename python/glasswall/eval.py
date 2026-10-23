@@ -42,7 +42,14 @@ def select_cases(spec: str) -> list[dict]:
 
 
 def is_infra(error: str | None) -> bool:
-    return bool(error) and error.split(":", 1)[0].strip() in INFRA_ERRORS
+    """Transient provider trouble: don't record, retry on resume.
+
+    "Request too large" is not transient: the conversation outgrew the provider's
+    per-request cap and would fail again, so it is recorded as a failed run.
+    """
+    if not error or "Request too large" in error:
+        return False
+    return error.split(":", 1)[0].strip() in INFRA_ERRORS
 
 
 async def main(batch: str, models: list[str], modes: list[str], case_spec: str, trials: int, pause: float) -> None:

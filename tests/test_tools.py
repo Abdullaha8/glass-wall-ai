@@ -59,10 +59,10 @@ def test_allowed_aggregate(env):
 def test_wall_returns_tokens_only(env):
     servers, bus, _ = env
     r = call(servers["wall"], "run_sql", {"query": "SELECT full_name, email, phone FROM customers_v"})
-    assert r["row_count"] == 50 and r["truncated"] is True
+    assert r["row_count"] == 20 and r["truncated"] is True
     assert all(TOKEN_FULL.match(v) for row in r["rows"] for v in row)
     ev = last_event(bus)
-    assert ev["color_tag"] == "green" and ev["token_count"] == 150 and ev["pii_pattern_count"] == 0
+    assert ev["color_tag"] == "green" and ev["token_count"] == 60 and ev["pii_pattern_count"] == 0
 
 
 def test_guard_blocks_raw(env):

@@ -26,13 +26,13 @@ from .guard import check_query
 from .pii import count_pii_patterns, count_tokens
 from .telemetry import TelemetryBus, make_event
 
-MAX_ROWS = 50
+MAX_ROWS = 20  # keeps a multi-step run under free-tier per-request token caps (Groq: 8k)
 DENIED_STATES = {"42501", "25006", "55000", "57014"}  # privilege, read-only, not updatable, timeout
 
 RUN_SQL_DESCRIPTION = (
     "Run one read-only SQL SELECT against the PostgreSQL view customers_v "
     "(columns: customer_id, full_name, email, phone, city, plan_tier, monthly_spend, "
-    "signup_date, notes). Returns up to 50 rows as JSON."
+    "signup_date, notes). Returns up to 20 rows as JSON."
 )
 SEND_MESSAGE_DESCRIPTION = (
     "Send an internal message. recipient is a team or person label (for example 'billing-team'); "
