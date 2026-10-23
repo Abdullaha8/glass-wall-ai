@@ -8,6 +8,7 @@ import { ModeToggle } from "./components/ModeToggle";
 import { OutboxInspector } from "./components/OutboxInspector";
 import { Scoreboard } from "./components/Scoreboard";
 import { ActivityFeed } from "./components/dash/ActivityFeed";
+import { AgentsTable } from "./components/dash/AgentsTable";
 import { AttackHeatmap } from "./components/dash/AttackHeatmap";
 import { Card, Pill } from "./components/dash/Card";
 import { LeakBars } from "./components/dash/LeakBars";
@@ -231,6 +232,9 @@ export default function App() {
             <div className="lg:col-span-3">
               <LiveTile wallRuns={headline.wallRuns} wallLeaks={wallLeaksAll} onRunLive={goLive} />
             </div>
+            <Card className="lg:col-span-12" title="Agents tested" right={<Pill>{latest.models.length} models · {Object.values(latest.summary).reduce((n, x) => n + (x.no_wall?.runs ?? 0) + (x.instructions_only?.runs ?? 0) + (x.glass_wall?.runs ?? 0), 0)} runs</Pill>}>
+              <AgentsTable data={latest} />
+            </Card>
           </div>
         )}
 
