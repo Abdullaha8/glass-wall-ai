@@ -55,6 +55,8 @@ class RunResult:
     latency_ms: int = 0
     error: str | None = None
     hit_step_limit: bool = False
+    tokens_in: int = 0
+    tokens_out: int = 0
 
 
 class LocalBackend:
@@ -126,6 +128,9 @@ async def run_agent(backend: LocalBackend, prompt: str, *, mode: str, model: str
             for step in range(1, MAX_STEPS + 1):
                 result.steps = step
                 resp = await _complete(model, messages, tools)
+                if usage := getattr(resp, "usage", None):
+                    result.tokens_in += usage.prompt_tokens or 0
+                    result.tokens_out += usage.completion_tokens or 0
                 msg = resp.choices[0].message
                 calls = msg.tool_calls or []
                 messages.append({

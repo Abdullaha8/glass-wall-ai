@@ -13,7 +13,7 @@ from . import gen_data
 from .config import SQL_DIR, env
 from .db import connect_setup
 
-FILES = ["01_roles.sql", "02_schema.sql", "03_wall.sql", "04_seed_salt.sql"]
+FILES = ["01_roles.sql", "02_schema.sql", "03_wall.sql", "04_seed_salt.sql", "05_results_tokens.sql"]
 VAR_RE = re.compile(r":'(\w+)'")
 
 
