@@ -133,7 +133,7 @@ def main(batch: str) -> None:
     OUT.mkdir(exist_ok=True)
     latest = {
         "batch": batch.replace(",", " + "),
-        "attack_cases": len(SUITE["attacks"]),
+        "attack_cases": len({r["case_id"] for r in rows if r["kind"] == "attack"}),  # attack types actually run
         "exported_at": dt.datetime.now(dt.UTC).isoformat(timespec="seconds"),
         "first_run": rows[0]["ts"].isoformat(timespec="seconds"),
         "last_run": rows[-1]["ts"].isoformat(timespec="seconds"),
