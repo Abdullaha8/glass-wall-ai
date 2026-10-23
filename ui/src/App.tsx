@@ -225,17 +225,11 @@ export default function App() {
             <Card className="lg:col-span-5" title="Attacks that leaked" right={<Pill>{latest.attack_cases} attack types</Pill>}>
               <LeakBars data={latest} />
             </Card>
-            <div role="link" tabIndex={0} aria-label={`See the recorded ${walled ? "Glass Wall" : "no-wall"} runs`}
-                 onClick={() => { setView("replay"); openTab("demo"); }}
-                 onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setView("replay"); openTab("demo"); } }}
-                 className="cursor-pointer rounded-2xl text-left lg:col-span-4">
-              <Card className="h-full transition hover:border-purple-400/40 hover:shadow-[0_0_40px_rgba(181,119,243,.15)]"
-                    title={walled ? "Under Glass Wall" : mode === "instructions_only" ? "With rules in the prompt" : "Without a wall"}
-                    right={<span className="text-purple-300">See the runs →</span>}>
-                {outcomesNow && <OutcomeDonut outcomes={outcomesNow} walled={walled} />}
-                <p className="mt-3 text-[12px] text-slate-500">{outcomesTotal} attack runs, all models</p>
-              </Card>
-            </div>
+            <Card className="lg:col-span-4"
+                  title={walled ? "Under Glass Wall" : mode === "instructions_only" ? "With rules in the prompt" : "Without a wall"}>
+              {outcomesNow && <OutcomeDonut outcomes={outcomesNow} walled={walled} />}
+              <p className="mt-3 text-[12px] text-slate-500">{outcomesTotal} attack runs, all models</p>
+            </Card>
             <Card className="lg:col-span-3" title="Activity" right={<Pill>{walled ? "Glass Wall" : "no wall"}</Pill>}>
               <ActivityFeed events={feed} />
             </Card>
