@@ -56,7 +56,7 @@ export function LiveControls({ mode, models, cases, model, onModel, run, runEven
 
       <button disabled={!ready || running || !model}
               onClick={() => onRun(custom.trim() ? { prompt: custom.trim() } : { case_id: caseId })}
-              className="w-full rounded bg-ink px-3 py-2 text-[13px] font-semibold text-surface disabled:opacity-40">
+              className="w-full rounded px-3 py-2 text-[13px] font-semibold bg-gradient-to-r from-purple-400 to-purple-600 text-white shadow-[0_0_28px_rgba(181,119,243,.35)] hover:shadow-[0_0_40px_rgba(181,119,243,.6)] disabled:opacity-40">
         {!ready ? "Backend waking…" : running ? "Agent running…" : `Run in ${MODE_LABEL[mode]}`}
       </button>
 

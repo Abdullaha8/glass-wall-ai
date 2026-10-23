@@ -7,10 +7,10 @@ const ROWS = [
 
 function Card({ walled }: { walled: boolean }) {
   const tone = walled
-    ? { ring: "ring-[#14b8a6]/40", head: "bg-[#ecfdf5] text-[#047857]", cell: "text-[#047857]", badge: "● Tokens only" }
-    : { ring: "ring-[#f43f5e]/30", head: "bg-[#fff1f2] text-[#be123c]", cell: "text-[#be123c]", badge: "■ Real personal data" };
+    ? { ring: "ring-purple-400/40", head: "bg-purple-400/10 text-purple-200", cell: "text-ok", badge: "● Tokens only" }
+    : { ring: "ring-leak/40", head: "bg-leak-tint text-leak", cell: "text-leak", badge: "■ Real personal data" };
   return (
-    <div className={`overflow-hidden rounded-2xl bg-surface shadow-[0_1px_2px_rgba(16,24,40,.06),0_8px_24px_rgba(16,24,40,.06)] ring-1 ${tone.ring}`}>
+    <div className={`overflow-hidden rounded-2xl bg-surface shadow-[0_8px_30px_rgba(0,0,0,.35)] ring-1 ${tone.ring}`}>
       <div className={`flex items-center justify-between px-5 py-3 ${tone.head}`}>
         <span className="text-[14px] font-semibold">{walled ? "With Glass Wall" : "Without a wall"}</span>
         <span className="font-mono text-[12px] font-medium">{tone.badge}</span>

@@ -25,9 +25,9 @@ export function HowItWorks() {
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
       {STEPS.map((s, i) => (
-        <div key={s.title} className="rounded-2xl bg-surface p-5 shadow-[0_1px_2px_rgba(16,24,40,.06)] ring-1 ring-line">
+        <div key={s.title} className="rounded-2xl bg-surface p-5 ring-1 ring-line transition hover:ring-purple-400/40">
           <div className="flex items-center gap-3">
-            <span className="grid h-10 w-10 place-items-center rounded-xl bg-[#0b1220] text-[#5eead4]">
+            <span className="grid h-10 w-10 place-items-center rounded-xl bg-purple-400/12 text-purple-300 ring-1 ring-purple-400/25">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}
                    strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d={s.icon} /></svg>
             </span>

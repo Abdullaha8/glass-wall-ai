@@ -36,17 +36,17 @@ export function Nav({ onTryLive }: { onTryLive: () => void }) {
     <header className="fixed inset-x-0 top-3 z-40 px-3">
       <nav aria-label="Main"
            className={`mx-auto flex max-w-[1120px] items-center gap-2 rounded-2xl border px-2.5 py-2 backdrop-blur-xl transition-all duration-300 ${
-             scrolled ? "border-white/10 bg-[#0b1220]/85 shadow-[0_10px_40px_rgba(2,6,23,.45)]" : "border-white/10 bg-white/[0.06]"}`}>
+             scrolled ? "border-white/10 bg-[#0d0b13]/85 shadow-[0_10px_40px_rgba(0,0,0,.55)]" : "border-white/10 bg-white/[0.06]"}`}>
         <a href="#top" className="flex items-center gap-2.5 rounded-xl px-2 py-1 text-white">
-          <img src="/logo.svg" width={30} height={30} alt="" className="rounded-[8px] shadow-[0_0_18px_rgba(94,234,212,.35)]" />
-          <span className="text-[15px] font-semibold tracking-[-0.01em]">Glass Wall <span className="text-[#5eead4]">AI</span></span>
+          <img src="/logo.svg" width={30} height={30} alt="" className="rounded-[8px] shadow-[0_0_18px_rgba(181,119,243,.45)]" />
+          <span className="text-[15px] font-semibold tracking-[-0.01em]">Glass Wall <span className="text-purple-300">AI</span></span>
         </a>
 
         <div className="mx-auto hidden items-center gap-1 md:flex">
           {LINKS.map(([label, id]) => (
             <a key={id} href={`#${id}`} aria-current={active === id ? "true" : undefined}
                className={`rounded-xl px-3.5 py-1.5 text-[14px] font-medium transition-colors ${
-                 active === id ? "bg-white/10 text-white" : "text-slate-300 hover:bg-white/5 hover:text-white"}`}>
+                 active === id ? "bg-purple-400/15 text-purple-100 ring-1 ring-purple-400/30" : "text-slate-300 hover:bg-white/5 hover:text-white"}`}>
               {label}
             </a>
           ))}
@@ -58,7 +58,7 @@ export function Nav({ onTryLive }: { onTryLive: () => void }) {
             <GitHubIcon />
           </a>
           <button onClick={onTryLive}
-                  className="rounded-xl bg-gradient-to-r from-[#5eead4] to-[#34d399] px-4 py-2 text-[14px] font-semibold text-[#0b1220] shadow-[0_0_24px_rgba(94,234,212,.35)] transition hover:shadow-[0_0_32px_rgba(94,234,212,.6)]">
+                  className="rounded-xl px-4 py-2 text-[14px] font-semibold transition bg-gradient-to-r from-purple-400 to-purple-600 text-white shadow-[0_0_28px_rgba(181,119,243,.35)] hover:shadow-[0_0_40px_rgba(181,119,243,.6)]">
             Try it live
           </button>
         </div>

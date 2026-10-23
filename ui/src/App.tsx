@@ -178,7 +178,7 @@ export default function App() {
     };
   }, [latest]);
 
-  const card = "rounded-2xl bg-surface shadow-[0_1px_2px_rgba(16,24,40,.06)] ring-1 ring-line";
+  const card = "rounded-2xl bg-surface shadow-[0_10px_40px_rgba(0,0,0,.35)] ring-1 ring-line";
 
   return (
     <div className="min-h-screen">

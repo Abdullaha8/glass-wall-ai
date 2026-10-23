@@ -1,69 +1,40 @@
 @import "tailwindcss";
 
-/* Design tokens (SPEC §5.2). Components use roles, never raw hex. */
+/* Design tokens. Components use roles, never raw hex.
+   Theme: black with a purple accent built around #B577F3. */
 :root {
-  color-scheme: light;
-  --bg: #f6f7f9;
-  --surface: #ffffff;
-  --surface-2: #f1f3f6;
-  --border: #e3e6eb;
-  --text: #0b1220;
-  --text-muted: #5b6472;
-
-  /* status: reserved for event state, always with glyph + label */
-  --ok: #1e7f4f;
-  --leak: #c2362b;
-  --info: #2259c9;
-  --warn: #9a5b00;
-  --ok-tint: #e3f1ea;
-  --leak-tint: #f8e4e2;
-  --info-tint: #e4ebf9;
-  --warn-tint: #f5ecdf;
-
-  /* categorical: the three modes, fixed order, validated (dataviz validate_palette.js) */
-  --mode-no-wall: #2a78d6;
-  --mode-instr: #eb6834;
-  --mode-wall: #1baf7a;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:where(:not([data-theme="light"])) {
-    color-scheme: dark;
-    --bg: #121312;
-    --surface: #1a1a19;
-    --surface-2: #242523;
-    --border: #393a37;
-    --text: #f0efec;
-    --text-muted: #a9a8a1;
-    --ok: #4cc38a;
-    --leak: #f07a70;
-    --info: #7aa5f5;
-    --warn: #e0a548;
-    --ok-tint: #17301f;
-    --leak-tint: #3a1d1a;
-    --info-tint: #1a2540;
-    --warn-tint: #352812;
-    --mode-no-wall: #3987e5;
-    --mode-instr: #d95926;
-    --mode-wall: #199e70;
-  }
-}
-:root[data-theme="dark"] {
   color-scheme: dark;
-  --bg: #121312;
-  --surface: #1a1a19;
-  --surface-2: #242523;
-  --border: #393a37;
-  --text: #f0efec;
-  --text-muted: #a9a8a1;
+
+  /* neutrals: near-black with a faint purple tint */
+  --bg: #08070c;
+  --surface: #110f17;
+  --surface-2: #1a1722;
+  --border: #2a2534;
+  --text: #f4f1fa;
+  --text-muted: #a69fb5;
+
+  /* brand purple scale (base = 400) */
+  --purple-100: #ecdffd;
+  --purple-200: #dcc2fb;
+  --purple-300: #c99ef8;
+  --purple-400: #b577f3;
+  --purple-500: #9d55e6;
+  --purple-600: #833bc9;
+  --purple-700: #6a2ea3;
+  --purple-800: #4a2173;
+  --purple-900: #2a1442;
+
+  /* status: reserved for event state, always with glyph + label (dark-surface steps) */
   --ok: #4cc38a;
   --leak: #f07a70;
   --info: #7aa5f5;
   --warn: #e0a548;
-  --ok-tint: #17301f;
-  --leak-tint: #3a1d1a;
-  --info-tint: #1a2540;
-  --warn-tint: #352812;
+  --ok-tint: #12261b;
+  --leak-tint: #2d1517;
+  --info-tint: #151d33;
+  --warn-tint: #2b2010;
+
+  /* categorical: the three modes, fixed order, dark-surface steps validated (dataviz validate_palette.js) */
   --mode-no-wall: #3987e5;
   --mode-instr: #d95926;
   --mode-wall: #199e70;
@@ -84,6 +55,15 @@
   --color-leak-tint: var(--leak-tint);
   --color-info-tint: var(--info-tint);
   --color-warn-tint: var(--warn-tint);
+  --color-purple-100: var(--purple-100);
+  --color-purple-200: var(--purple-200);
+  --color-purple-300: var(--purple-300);
+  --color-purple-400: var(--purple-400);
+  --color-purple-500: var(--purple-500);
+  --color-purple-600: var(--purple-600);
+  --color-purple-700: var(--purple-700);
+  --color-purple-800: var(--purple-800);
+  --color-purple-900: var(--purple-900);
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, "Cascadia Mono", monospace;
 }
@@ -94,8 +74,10 @@ html, body {
   font-family: var(--font-sans);
 }
 
+::selection { background: color-mix(in srgb, var(--purple-400) 40%, transparent); }
+
 :focus-visible {
-  outline: 2px solid var(--info);
+  outline: 2px solid var(--purple-300);
   outline-offset: 2px;
 }
 
