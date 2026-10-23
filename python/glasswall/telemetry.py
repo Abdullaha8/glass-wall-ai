@@ -87,6 +87,18 @@ class TelemetryBus:
         except httpx.HTTPError:
             log.warning("webhook POST failed")
 
+    def restore(self, limit: int = BACKLOG_SIZE) -> int:
+        """Reload recent events from audit.events, so a restart or sleep doesn't empty the live log."""
+        if self._pool is None:
+            return 0
+        with self._pool.connection() as conn:
+            rows = conn.execute(
+                "SELECT event FROM (SELECT id, event FROM audit.events "
+                "WHERE run_id IS NULL OR (run_id NOT IN ('pytest', 'smoke') AND run_id NOT LIKE 'check\\_%%') "
+                "ORDER BY id DESC LIMIT %s) recent ORDER BY id", (limit,)).fetchall()
+        self.backlog.extend(r[0] for r in rows)
+        return len(rows)
+
     def subscribe(self) -> asyncio.Queue:
         q: asyncio.Queue = asyncio.Queue(maxsize=500)
         self._subscribers.add(q)

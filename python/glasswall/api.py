@@ -66,6 +66,7 @@ mcp_apps = {key: srv.streamable_http_app(streamable_http_path=f"/mcp/{key}", sta
 async def lifespan(_: FastAPI):
     for pool in [*pools.values(), writer_pool]:
         pool.open(wait=True, timeout=30)
+    await asyncio.to_thread(bus.restore)
     async with contextlib.AsyncExitStack() as stack:
         for srv in servers.values():
             await stack.enter_async_context(srv.session_manager.run())
