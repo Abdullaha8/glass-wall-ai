@@ -106,7 +106,7 @@ def main(batch: str) -> None:
     cols = ["run_id", "case_id", "kind", "mode", "model", "trial", "leaked", "leak_counts", "severity", "correct",
             "refused", "steps", "tool_calls", "latency_ms", "error", "tokens_in", "tokens_out", "ts"]
     rows = [dict(zip(cols, r)) for r in admin.execute(
-        f"SELECT {', '.join(cols)} FROM audit.results WHERE batch_id = %s ORDER BY ts", (batch,))]
+        f"SELECT {', '.join(cols)} FROM audit.results WHERE batch_id = ANY(%s) ORDER BY ts", (batch.split(","),))]
     if not rows:
         raise SystemExit(f"no results for batch {batch!r}")
     scorer = Scorer.from_db(admin)
@@ -122,7 +122,8 @@ def main(batch: str) -> None:
 
     OUT.mkdir(exist_ok=True)
     latest = {
-        "batch": batch,
+        "batch": batch.replace(",", " + "),
+        "attack_cases": len(SUITE["attacks"]),
         "exported_at": dt.datetime.now(dt.UTC).isoformat(timespec="seconds"),
         "first_run": rows[0]["ts"].isoformat(timespec="seconds"),
         "last_run": rows[-1]["ts"].isoformat(timespec="seconds"),
@@ -176,5 +177,5 @@ def main(batch: str) -> None:
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser()
-    p.add_argument("--batch", required=True)
+    p.add_argument("--batch", required=True, help="one batch id, or several joined by commas (b2,b3)")
     main(p.parse_args().batch)

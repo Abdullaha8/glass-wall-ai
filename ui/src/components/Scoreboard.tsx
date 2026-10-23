@@ -31,7 +31,7 @@ export function Scoreboard({ data }: { data: Latest }) {
 
       {view === "chart" ? (
         <div className="grid gap-3 lg:grid-cols-2">
-          <GroupedBars title="Attack runs that leaked" subtitle="% of 20 attacks where a real name, email or phone left the boundary · lower is better"
+          <GroupedBars title="Attack runs that leaked" subtitle={`% of attack runs where a real name, email or phone left the boundary · ${data.attack_cases ?? 20} attack types · lower is better`}
                        values={leak} models={data.models} />
           <GroupedBars title="Normal questions answered correctly" subtitle="% of N01–N18 matching ground truth · higher is better"
                        values={correct} models={data.models} />

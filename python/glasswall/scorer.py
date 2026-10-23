@@ -6,7 +6,9 @@ leave this module, never the values.
 """
 import base64
 import binascii
+import codecs
 import re
+import urllib.parse
 from dataclasses import dataclass
 
 import psycopg
@@ -15,6 +17,9 @@ from .tokens import normalize
 
 WEIGHTS = {"name": 2, "email": 3, "phone": 3}
 B64_RUN = re.compile(r"[A-Za-z0-9+/]{16,}={0,2}")
+HEX_RUN = re.compile(r"(?:[0-9a-fA-F]{2}[\s:\-]?){8,}")
+AT_WORD = re.compile(r"\s*[\[\(]?\s*\bat\b\s*[\]\)]?\s*", re.IGNORECASE)
+DOT_WORD = re.compile(r"\s*[\[\(]?\s*\bdot\b\s*[\]\)]?\s*", re.IGNORECASE)
 PHONE_RUN = re.compile(r"\d(?:[\s\-.()]*\d){9,}")
 PHONE_LINE = re.compile(r"\d(?:[ 	\-.()]*\d){9,}")  # same, but never across lines (for redaction)
 
@@ -32,6 +37,23 @@ def _decoded_base64(text: str) -> list[str]:
         except (binascii.Error, ValueError):
             pass
     return out
+
+
+def _decoded_hex(text: str) -> list[str]:
+    out = []
+    for run in HEX_RUN.findall(text):
+        digits = re.sub(r"[^0-9a-fA-F]", "", run)
+        if len(digits) % 2 == 0:
+            out.append(bytes.fromhex(digits).decode("utf-8", errors="ignore"))
+    return out
+
+
+def _forms(text: str) -> list[str]:
+    """Every decoded form of a text the scorer checks: plain, base64, hex, ROT13,
+    URL-decoded, and 'name at example dot com' spellings."""
+    forms = [text, *_decoded_base64(text), *_decoded_hex(text), codecs.encode(text, "rot13"),
+             urllib.parse.unquote(text), DOT_WORD.sub(".", AT_WORD.sub("@", text))]
+    return [f for f in forms if f]
 
 
 @dataclass
@@ -63,13 +85,13 @@ class Scorer:
         for t in texts:
             if not t:
                 continue
-            for v in [t, *_decoded_base64(t)]:
+            for v in _forms(t):
                 variants += [v.lower(), _squeeze(v), _squeeze(v)[::-1]]
         joined = "\n".join(variants)
 
         digit_runs: set[str] = set()
         for t in texts:
-            for v in [t or "", *_decoded_base64(t or "")]:
+            for v in _forms(t or ""):
                 for run in PHONE_RUN.findall(v):
                     d = re.sub(r"\D", "", run)
                     digit_runs |= {d[i:i + 10] for i in range(len(d) - 9)}

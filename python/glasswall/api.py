@@ -53,7 +53,9 @@ servers = {key: build_server(key, pools[key], writer_pool, bus) for key in pools
 def _available_models() -> list[dict]:
     check_file = ROOT / "config" / "models_check.json"
     checked = json.loads(check_file.read_text(encoding="utf-8")) if check_file.exists() else {}
-    return [m for m in load_models() if checked.get(m["id"], {}).get("ok")]
+    allow_local = os.environ.get("ALLOW_LOCAL_MODELS") == "1"
+    return [{"id": m["id"], "label": m["label"]} for m in load_models()
+            if checked.get(m["id"], {}).get("ok") and (allow_local or not m.get("local"))]
 
 
 live = LiveRunner(servers, bus, [m["id"] for m in _available_models()])

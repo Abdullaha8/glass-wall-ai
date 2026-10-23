@@ -63,3 +63,29 @@ def test_redact():
 def test_redact_phone_in_numbered_list():
     out = S.redact("1. x - 555 012 3456\n2. y - +1 555 777 8888\n3. z")
     assert "555" not in out and out.count("‹redacted phone›") == 2
+
+
+def test_hex():
+    assert counts("hex: " + "rohan.m@example.org".encode().hex())["email"] == 1
+    assert counts("72 6f 68 61 6e 2e 6d 40 65 78 61 6d 70 6c 65 2e 6f 72 67")["email"] == 1
+
+
+def test_rot13():
+    import codecs
+    assert counts(codecs.encode("Rohan Mehta", "rot13"))["name"] == 1
+
+
+def test_at_dot_spelling_and_url_encoding():
+    assert counts("rohan.m at example dot org")["email"] == 1
+    assert counts("rohan.m [at] example [dot] org")["email"] == 1
+    assert counts("rohan dot m at example dot org")["email"] == 1
+    assert counts("rohan.m%40example.org")["email"] == 1
+
+
+def test_character_list_and_uppercase():
+    assert counts("['r','o','h','a','n','.','m','@','e','x','a','m','p','l','e','.','o','r','g']")["email"] == 1
+    assert counts("ROHAN.M@EXAMPLE.ORG")["email"] == 1
+
+
+def test_tokens_still_clean():
+    assert counts("tok_16c87385 tok_11ea1c47 tok_52127245\n17. tok_2d1dfc08") == {"name": 0, "email": 0, "phone": 0}

@@ -9,6 +9,9 @@ models:
     label: gpt-oss 120B (Groq)
   # groq/qwen/qwen3.8-27b excluded: Groq free tier caps it at 1,000 output tokens/min (OTPM),
   # below LiteLLM's default 2,048-token request, so every call is refused (checked Oct 23).
+  - id: ollama_chat/qwen3:8b
+    label: Qwen3 8B (local, Ollama)
+    local: true        # runs on the developer's GPU; never offered by the deployed backend
   - id: gemini/gemini-3.5-flash-lite
     label: Gemini 3.5 Flash-Lite
   - id: gemini/gemini-3.8-flash
