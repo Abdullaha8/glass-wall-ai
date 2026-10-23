@@ -33,6 +33,7 @@ export interface TelemetryEvent {
   color_tag: Color;
   detail: string;
   recipient?: string;
+  original_color_tag?: Color;
 }
 
 export interface ModeSummary {

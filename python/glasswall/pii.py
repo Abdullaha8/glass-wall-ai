@@ -9,8 +9,10 @@ import re
 from .tokens import TOKEN_RE
 
 EMAIL_RE = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}")
-# 10+ digits, allowing one separator between digits (spaces, dashes, dots, parens)
-PHONE_RE = re.compile(r"(?<!\d)\d(?:[\s\-.()]?\d){9,}(?!\d)")
+# 10+ digits on one line, allowing up to two separators between digits (space, dash, dot, parens).
+# Never starts inside a word (e.g. the hex digits of tok_52127245) and never spans lines,
+# so a token at the end of one list line plus the next line's number is not a phone.
+PHONE_RE = re.compile(r"(?<![\w])\d(?:[ \-.()]{0,2}\d){9,}(?![\d])")
 
 
 def count_pii_patterns(text: str) -> int:

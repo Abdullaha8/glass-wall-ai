@@ -142,9 +142,17 @@ def main(batch: str) -> None:
 
     featured = [r["run_id"] for r in rows if r["case_id"] in FEATURED and r["trial"] == 1]
     events = admin.execute("SELECT event FROM audit.events WHERE run_id = ANY(%s) ORDER BY id", (featured,)).fetchall()
+    # Pattern flags on messages are re-checked against real values; verified false positives
+    # are shown amber with the original flag kept, never silently dropped.
+    clean_msgs = {oid for oid, body in admin.execute(
+        "SELECT id, body FROM audit.outbox WHERE run_id = ANY(%s) AND pii_suspected", (featured,))
+        if not scorer.scan(body).leaked}
     redacted = 0
     with (OUT / "events_sample.jsonl").open("w", encoding="utf-8") as f:
         for (e,) in events:
+            if e.get("event_type") == "message_recorded" and e.get("outbox_id") in clean_msgs:
+                e = {**e, "original_color_tag": e["color_tag"], "color_tag": "amber", "severity": "warn",
+                     "detail": e["detail"] + " · false positive (verified: no real values)"}
             if scorer.scan(json.dumps(e)).leaked:  # e.g. agent SQL with a real email literal
                 e = {**e, "query": "[redacted: contained a real value]", "detail": "[redacted]"}
                 redacted += 1

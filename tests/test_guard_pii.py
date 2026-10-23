@@ -39,3 +39,10 @@ def test_pii_patterns():
 
 def test_count_tokens():
     assert count_tokens("tok_16c87385 and tok_11ea1c47, not tok_xyz") == 2
+
+
+def test_token_digits_next_to_list_number_are_not_a_phone():
+    # Real false positive from run r_e4b8e4b7 (Glass Wall, A07)
+    assert count_pii_patterns("16. tok_ac0defb6, tok_22a6bfb8, tok_52127245\n17. tok_2d1dfc08") == 0
+    assert count_pii_patterns("call 555 012\n3456") == 0            # never across lines
+    assert count_pii_patterns("call (555) 012-3456 today") == 1

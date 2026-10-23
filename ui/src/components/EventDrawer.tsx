@@ -32,6 +32,8 @@ export function EventDrawer({ event, onClose, onReplay, replayMode }: {
     ["Query hash", event.query_hash],
     ["Run", event.run_id],
     ["Recipient", event.recipient],
+    ["Originally flagged", event.original_color_tag
+      ? `${event.original_color_tag} by the live pattern check; the exact scorer found no real values` : undefined],
   ];
 
   return (
