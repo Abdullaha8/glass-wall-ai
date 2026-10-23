@@ -1,16 +1,21 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ArchitectureCanvas } from "./components/ArchitectureCanvas";
 import { EventDrawer } from "./components/EventDrawer";
-import { Header, type Backend } from "./components/Header";
+import { type Backend } from "./components/Header";
 import { LiveControls } from "./components/LiveControls";
 import { LogStream } from "./components/LogStream";
-import { MetricCard } from "./components/MetricCard";
 import { ModeToggle } from "./components/ModeToggle";
 import { OutboxInspector } from "./components/OutboxInspector";
 import { Scoreboard } from "./components/Scoreboard";
+import { BeforeAfter } from "./components/landing/BeforeAfter";
+import { Footer } from "./components/landing/Footer";
+import { Hero, type HeadlineStats } from "./components/landing/Hero";
+import { HowItWorks } from "./components/landing/HowItWorks";
+import { Nav } from "./components/landing/Nav";
+import { Section } from "./components/landing/Section";
 import * as api from "./lib/api";
 import {
-  MODE_LABEL, shortModel,
+  shortModel,
   type CaseInfo, type Latest, type LiveRun, type ModelInfo, type Mode, type OutboxMessage, type TelemetryEvent,
 } from "./lib/types";
 
@@ -128,81 +133,127 @@ export default function App() {
   const wall = summary?.glass_wall;
   const replayOutboxShown = replayOutbox.filter((m) => m.model === replayModel && m.mode === mode);
 
+  const headline = useMemo<HeadlineStats>(() => {
+    const empty: HeadlineStats = { wallLeak: null, noWallLeak: null, rulesLeakMax: null, wallCorrect: null, wallRuns: 0, models: 0 };
+    if (!latest) return empty;
+    const sums = Object.values(latest.summary);
+    const wallAttacks = sums.reduce((n, s) => n + (s.glass_wall?.attack_runs ?? 0), 0);
+    const wallLeaks = sums.reduce((n, s) => n + (s.glass_wall?.attack_leak_runs ?? 0), 0);
+    // ranges only from models with a meaningful number of attack runs
+    const solid = sums.filter((s) => (s.no_wall?.attack_runs ?? 0) >= 20);
+    const noWall = solid.map((s) => s.no_wall?.violation_rate).filter((v): v is number => v != null);
+    const rules = solid.map((s) => s.instructions_only?.violation_rate).filter((v): v is number => v != null);
+    const correct = sums.map((s) => s.glass_wall?.correctness_core).filter((v): v is number => v != null);
+    return {
+      wallLeak: wallAttacks ? (100 * wallLeaks) / wallAttacks : null,
+      noWallLeak: noWall.length ? [Math.min(...noWall), Math.max(...noWall)] : null,
+      rulesLeakMax: rules.length ? Math.max(...rules) : null,
+      wallCorrect: correct.length ? Math.min(...correct) : null,
+      wallRuns: sums.reduce((n, s) => n + (s.glass_wall?.runs ?? 0), 0),
+      models: latest.models.length,
+    };
+  }, [latest]);
+
+  const card = "rounded-2xl bg-surface shadow-[0_1px_2px_rgba(16,24,40,.06)] ring-1 ring-line";
+
   return (
     <div className="min-h-screen">
-      <Header view={view} onView={(v) => { setView(v); setSelected(null); }} backend={backend} />
+      <Nav />
+      <Hero stats={headline} />
 
-      <main className="mx-auto max-w-[1400px] space-y-4 px-4 py-4">
-        {view === "replay" ? (
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            <MetricCard label="Attacks that leaked data · with Glass Wall" value={summary?.glass_wall?.violation_rate ?? null} unit="%"
-                        tone={summary?.glass_wall?.violation_rate == null ? undefined : summary.glass_wall.violation_rate === 0 ? "green" : "red"}
-                        status={summary?.glass_wall?.violation_rate === 0 ? "WALL HELD" : "LEAK"}
-                        sublabel={wall ? `${wall.attack_leak_runs} of ${wall.attack_runs} attacks · ${wall.attack_leak_runs + wall.normal_leak_runs} leaks in all ${wall.runs} runs` : undefined} />
-            <MetricCard label="Attacks that leaked data · no wall" value={summary?.no_wall?.violation_rate ?? null} unit="%"
-                        tone={summary?.no_wall?.violation_rate == null ? undefined : summary.no_wall.violation_rate ? "red" : "green"}
-                        sublabel={summary?.no_wall ? `${summary.no_wall.attack_leak_runs} of ${summary.no_wall.attack_runs} attacks got real data out` : undefined} />
-            <MetricCard label="Attacks that leaked data · rules in the prompt" value={summary?.instructions_only?.violation_rate ?? null} unit="%"
-                        tone={summary?.instructions_only?.violation_rate == null ? undefined : summary.instructions_only.violation_rate ? "red" : "green"}
-                        sublabel={'Same access as "no wall", but told "never reveal contact details"'} />
-            <MetricCard label="Normal questions answered correctly · with Glass Wall" value={summary?.glass_wall?.correctness_core ?? null} unit="%"
-                        tone="blue" status="STILL USEFUL"
-                        sublabel={summary?.no_wall?.correctness_core != null ? `Without the wall: ${Math.round(summary.no_wall.correctness_core)}%` : undefined} />
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            <MetricCard label="Events this session" value={liveEvents.length} tone="blue" />
-            <MetricCard label="Leak signals" value={liveEvents.filter((e) => e.color_tag === "red").length} tone="red" sublabel="PII patterns left a tool" />
-            <MetricCard label="Tokens-only results" value={liveEvents.filter((e) => e.color_tag === "green").length} tone="green" />
-            <MetricCard label="Wall held" value={liveEvents.filter((e) => e.color_tag === "amber").length} tone="amber" status="WARN" sublabel="blocked or denied by the database" />
-          </div>
-        )}
+      <main>
+        <Section eyebrow="What the agent sees" title="Same customers, same query. Only one of them is safe to hand an AI."
+                 lead="These rows are exactly what each agent role receives from the database. With the wall on, every personal field arrives as a token, and the real values stay behind.">
+          <BeforeAfter />
+        </Section>
 
-        <div className="grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
-          <div className="min-w-0 space-y-4">
-            <ArchitectureCanvas mode={mode} lastEvent={lastEvent} />
-            <LogStream events={events} selectedIndex={selected} onSelect={setSelected} />
-          </div>
-
-          <aside className="space-y-3">
-            <section className="space-y-2 rounded border border-line bg-surface p-3">
-              <h2 className="text-[13px] font-semibold">Mode</h2>
-              <ModeToggle value={mode} onChange={setMode} disabled={run?.status === "running"} />
-              {view === "replay" && latest && (
-                <label className="block text-[12px] text-muted">
-                  Model
-                  <select value={replayModel} onChange={(e) => setReplayModel(e.target.value)}
-                          className="mt-1 block w-full rounded border border-line bg-surface-2 px-2 py-1.5 text-[13px] text-ink">
-                    {latest.models.map((m) => <option key={m} value={m}>{shortModel(m)}</option>)}
-                  </select>
-                </label>
-              )}
-              <p className="text-[12px] text-muted">
-                {view === "replay"
-                  ? `Replaying recorded telemetry for featured attacks in ${MODE_LABEL[mode]}.`
-                  : "Switches which MCP endpoint and prompt the next run uses. The agent can't change it."}
-              </p>
-            </section>
-
-            {view === "live" && (
-              <LiveControls mode={mode} models={models} cases={cases} model={liveModel} onModel={setLiveModel}
-                            run={run} runEvents={runEvents} onRun={startRun} error={runError} ready={backend === "up"} />
-            )}
-          </aside>
+        <div className="border-y border-line bg-surface">
+          <Section id="how" eyebrow="How it works" title="A wall in the database, not a promise from the model"
+                   lead="Telling a model to never reveal contact details is advice, and advice can be talked around. Glass Wall makes sure there is nothing real to send.">
+            <HowItWorks />
+          </Section>
         </div>
 
-        {view === "replay"
-          ? <OutboxInspector messages={replayOutboxShown}
-                             note="Recorded messages from featured attacks. Real values are replaced with ‹redacted› markers in this public replay." />
-          : <OutboxInspector messages={outbox}
-                             onReview={(id, r) => api.reviewOutbox(id, r).then(refreshOutbox).catch(() => {})} />}
+        <Section id="demo" eyebrow="Live demo" title="Watch real agents try to leak data"
+                 lead={view === "replay"
+                   ? "Replaying recorded runs. Switch modes to see the same attacks with and without the wall, or go live to run an agent yourself."
+                   : "Run a real agent against the deployed MCP server. Pick a mode and an attack, and watch every query and message as it happens."}>
+          <div className={`${card} p-4 sm:p-5`}>
+            <div className="flex flex-wrap items-center gap-3">
+              <div role="tablist" aria-label="View" className="flex rounded-lg bg-surface-2 p-1">
+                {(["replay", "live"] as const).map((v) => (
+                  <button key={v} role="tab" aria-selected={view === v} onClick={() => { setView(v); setSelected(null); }}
+                          className={`rounded-md px-3.5 py-1.5 text-[13px] font-semibold ${view === v ? "bg-surface text-ink shadow-sm" : "text-muted hover:text-ink"}`}>
+                    {v === "replay" ? "Replay recorded runs" : "Run it live"}
+                  </button>
+                ))}
+              </div>
+              <div className="min-w-[280px] flex-1 sm:max-w-[420px]">
+                <ModeToggle value={mode} onChange={setMode} disabled={run?.status === "running"} />
+              </div>
+              {view === "replay" && latest && (
+                <select value={replayModel} onChange={(e) => setReplayModel(e.target.value)} aria-label="Model"
+                        className="rounded-lg border border-line bg-surface-2 px-3 py-2 text-[13px] text-ink">
+                  {latest.models.map((m) => <option key={m} value={m}>{shortModel(m)}{latest.partial_models?.[m] ? " (partial)" : ""}</option>)}
+                </select>
+              )}
+              <span className="ml-auto flex items-center gap-2 text-[12px] text-muted" aria-live="polite">
+                <span className={`inline-block h-2 w-2 rounded-full ${backend === "up" ? "bg-ok" : backend === "waking" ? "animate-pulse bg-warn" : "bg-muted"}`} aria-hidden />
+                {backend === "up" ? "live backend ready" : backend === "waking" ? "waking live backend (~40 s)" : "live backend offline, replay still works"}
+              </span>
+            </div>
 
-        {latest ? <Scoreboard data={latest} /> : (
-          <p className="rounded border border-line bg-surface p-4 text-[13px] text-muted">
-            No recorded results found. Run <code className="font-mono">python -m glasswall.export</code>.
-          </p>
-        )}
+            {view === "replay" && summary && (
+              <p className="mt-3 text-[13px] text-muted">
+                {shortModel(replayModel)}: with Glass Wall <strong className="text-ink">{wall?.attack_leak_runs ?? 0} of {wall?.attack_runs ?? 0}</strong> attacks
+                leaked · no wall <strong className="text-ink">{summary.no_wall?.attack_leak_runs ?? 0} of {summary.no_wall?.attack_runs ?? 0}</strong> ·
+                rules in the prompt <strong className="text-ink">{summary.instructions_only?.attack_leak_runs ?? 0} of {summary.instructions_only?.attack_runs ?? 0}</strong>
+              </p>
+            )}
+
+            <div className="mt-5 grid grid-cols-[minmax(0,1fr)] gap-5 lg:grid-cols-[minmax(0,1fr)_360px]">
+              <div className="min-w-0 space-y-5">
+                <ArchitectureCanvas mode={mode} lastEvent={lastEvent} />
+                <LogStream events={events} selectedIndex={selected} onSelect={setSelected} />
+              </div>
+              <aside className="space-y-4">
+                {view === "live" ? (
+                  <LiveControls mode={mode} models={models} cases={cases} model={liveModel} onModel={setLiveModel}
+                                run={run} runEvents={runEvents} onRun={startRun} error={runError} ready={backend === "up"} />
+                ) : (
+                  <div className="rounded-xl bg-surface-2 p-4 text-[13px] leading-relaxed text-muted">
+                    <p className="font-semibold text-ink">Reading the replay</p>
+                    <p className="mt-2"><span className="text-leak">■ red</span>: real personal data left a tool.</p>
+                    <p><span className="text-ok">● green</span>: tokens only.</p>
+                    <p><span className="text-warn">▲ amber</span>: blocked, the wall held.</p>
+                    <p><span className="text-info">◆ blue</span>: everything else.</p>
+                    <p className="mt-2">Click any row to see the SQL the agent wrote.</p>
+                  </div>
+                )}
+              </aside>
+            </div>
+
+            <div className="mt-5">
+              {view === "replay"
+                ? <OutboxInspector messages={replayOutboxShown}
+                                   note="Messages the agent sent in these runs. Real values are replaced with ‹redacted› markers in this public replay." />
+                : <OutboxInspector messages={outbox}
+                                   onReview={(id, r) => api.reviewOutbox(id, r).then(refreshOutbox).catch(() => {})} />}
+            </div>
+          </div>
+        </Section>
+
+        <div className="border-t border-line bg-surface">
+          <Section id="results" eyebrow="Results" title="Measured, not claimed"
+                   lead="Real agents, real attacks, three setups: no wall, rules in the prompt, and Glass Wall. Leaks are scored against every real value, including spelled-out, reversed and encoded forms.">
+            {latest ? <Scoreboard data={latest} /> : (
+              <p className="text-[13px] text-muted">No recorded results found. Run <code className="font-mono">python -m glasswall.export</code>.</p>
+            )}
+          </Section>
+        </div>
       </main>
+
+      <Footer />
 
       <EventDrawer event={selected != null ? events[selected] ?? null : null} onClose={() => setSelected(null)}
                    replayMode={mode} onReplay={view === "live" && backend === "up" ? replayQuery : undefined} />

@@ -6,7 +6,7 @@ export function ModeToggle({ value, onChange, disabled }: {
   disabled?: boolean;
 }) {
   return (
-    <div role="radiogroup" aria-label="Mode" className="grid grid-cols-3 gap-1 rounded border border-line bg-surface-2 p-1">
+    <div role="radiogroup" aria-label="Mode" className="grid grid-cols-3 gap-1 rounded-xl border border-line bg-surface-2 p-1">
       {MODES.map((m) => {
         const on = m === value;
         return (

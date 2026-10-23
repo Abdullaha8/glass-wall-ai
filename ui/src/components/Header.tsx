@@ -26,7 +26,7 @@ export function Header({ view, onView, backend }: {
         </div>
       </div>
 
-      <div role="tablist" aria-label="View" className="ml-auto flex rounded border border-line bg-surface-2 p-0.5">
+      <div role="tablist" aria-label="View" className="ml-auto flex rounded-xl border border-line bg-surface-2 p-0.5">
         {(["replay", "live"] as const).map((v) => (
           <button key={v} role="tab" aria-selected={view === v} onClick={() => onView(v)}
                   className={`rounded px-3 py-1 text-[13px] font-medium ${view === v ? "bg-surface text-ink shadow-[0_0_0_1px_var(--border)]" : "text-muted hover:text-ink"}`}>

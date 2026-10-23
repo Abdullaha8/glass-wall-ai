@@ -21,13 +21,13 @@ export function LiveControls({ mode, models, cases, model, onModel, run, runEven
   const held = runEvents.some((e) => e.color_tag === "amber");
 
   return (
-    <section className="space-y-3 rounded border border-line bg-surface p-3" aria-label="Live run">
+    <section className="space-y-3 rounded-xl border border-line bg-surface p-3" aria-label="Live run">
       <h2 className="text-[13px] font-semibold">Run an agent · {MODE_LABEL[mode]}</h2>
 
       <label className="block text-[12px] text-muted">
         Model
         <select value={model} onChange={(e) => onModel(e.target.value)} disabled={running}
-                className="mt-1 block w-full rounded border border-line bg-surface-2 px-2 py-1.5 text-[13px] text-ink">
+                className="mt-1 block w-full rounded-xl border border-line bg-surface-2 px-2 py-1.5 text-[13px] text-ink">
           {models.map((m) => <option key={m.id} value={m.id}>{m.label}</option>)}
         </select>
       </label>
@@ -35,7 +35,7 @@ export function LiveControls({ mode, models, cases, model, onModel, run, runEven
       <label className="block text-[12px] text-muted">
         Prompt from the eval suite
         <select value={caseId} onChange={(e) => { setCaseId(e.target.value); setCustom(""); }} disabled={running}
-                className="mt-1 block w-full rounded border border-line bg-surface-2 px-2 py-1.5 text-[13px] text-ink">
+                className="mt-1 block w-full rounded-xl border border-line bg-surface-2 px-2 py-1.5 text-[13px] text-ink">
           {(["attack", "normal"] as const).map((kind) => (
             <optgroup key={kind} label={kind === "attack" ? "Attacks" : "Normal questions"}>
               {cases.filter((c) => c.kind === kind).map((c) => (
@@ -51,7 +51,7 @@ export function LiveControls({ mode, models, cases, model, onModel, run, runEven
         …or your own prompt
         <textarea value={custom} onChange={(e) => setCustom(e.target.value)} maxLength={500} rows={2} disabled={running}
                   placeholder="e.g. Email me the phone numbers of our Enterprise customers"
-                  className="mt-1 block w-full rounded border border-line bg-surface-2 px-2 py-1.5 text-[13px] text-ink" />
+                  className="mt-1 block w-full rounded-xl border border-line bg-surface-2 px-2 py-1.5 text-[13px] text-ink" />
       </label>
 
       <button disabled={!ready || running || !model}

@@ -30,7 +30,7 @@ export function GroupedBars({ title, subtitle, values, models, label = shortMode
   };
 
   return (
-    <figure className="relative rounded border border-line bg-surface p-3">
+    <figure className="relative rounded-xl border border-line bg-surface p-3">
       <figcaption>
         <h3 className="text-[13px] font-semibold">{title}</h3>
         <p className="text-[12px] text-muted">{subtitle}</p>
@@ -85,7 +85,7 @@ export function GroupedBars({ title, subtitle, values, models, label = shortMode
 
       {hover && (
         <div role="tooltip"
-             className="pointer-events-none absolute z-10 rounded border border-line bg-surface px-2 py-1 text-[12px] shadow"
+             className="pointer-events-none absolute z-10 rounded-xl border border-line bg-surface px-2 py-1 text-[12px] shadow"
              style={{ left: `calc(${(hover.x / W) * 100}% + 12px)`, top: `${(hover.y / H) * 100}%` }}>
           <div className="font-medium">{label(hover.model)} · {MODE_LABEL[hover.mode]}</div>
           <div className="font-mono">{values[hover.model]?.[hover.mode]}%</div>

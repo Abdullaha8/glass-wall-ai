@@ -15,11 +15,12 @@ export function LogStream({ events, onSelect, selectedIndex }: {
 }) {
   const [hidden, setHidden] = useState<Set<Color>>(new Set());
   const [paused, setPaused] = useState(false);
-  const bottom = useRef<HTMLDivElement>(null);
+  const box = useRef<HTMLDivElement>(null);
   const rows = events.map((e, i) => ({ e, i })).filter(({ e }) => !hidden.has(e.color_tag));
 
   useEffect(() => {
-    if (!paused) bottom.current?.scrollIntoView({ block: "nearest" });
+    // scroll the log box itself; scrollIntoView would drag the whole page down to the log
+    if (!paused && box.current) box.current.scrollTop = box.current.scrollHeight;
   }, [events.length, paused]);
 
   const toggle = (c: Color) =>
@@ -40,7 +41,7 @@ export function LogStream({ events, onSelect, selectedIndex }: {
   };
 
   return (
-    <section className="rounded border border-line bg-surface" aria-label="Live log stream">
+    <section className="rounded-xl border border-line bg-surface" aria-label="Live log stream">
       <div className="flex flex-wrap items-center gap-2 border-b border-line px-3 py-2">
         <h2 className="text-[13px] font-semibold">Telemetry</h2>
         <span className="text-[12px] text-muted">{events.length} events</span>
@@ -57,7 +58,7 @@ export function LogStream({ events, onSelect, selectedIndex }: {
           </button>
         </div>
       </div>
-      <div role="log" aria-live="polite" tabIndex={0} onKeyDown={onKey}
+      <div ref={box} role="log" aria-live="polite" tabIndex={0} onKeyDown={onKey}
            className="max-h-[320px] overflow-y-auto font-mono text-[12px] focus-visible:outline-offset-[-2px]">
         {rows.length === 0 && <p className="px-3 py-6 text-center font-sans text-[13px] text-muted">No events yet.</p>}
         {rows.map(({ e, i }) => {
@@ -75,7 +76,6 @@ export function LogStream({ events, onSelect, selectedIndex }: {
             </button>
           );
         })}
-        <div ref={bottom} />
       </div>
     </section>
   );

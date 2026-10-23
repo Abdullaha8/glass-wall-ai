@@ -10,7 +10,7 @@ export function MetricCard({ label, value, unit, sublabel, tone, status }: {
   status?: string;
 }) {
   return (
-    <div className="rounded border border-line bg-surface p-3">
+    <div className="rounded-xl border border-line bg-surface p-3">
       <div className="flex items-start justify-between gap-2">
         <p className="text-[12px] font-medium text-muted">{label}</p>
         {tone && <StatusBadge color={tone} label={status} />}

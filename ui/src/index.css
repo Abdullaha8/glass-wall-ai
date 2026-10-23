@@ -3,12 +3,12 @@
 /* Design tokens (SPEC §5.2). Components use roles, never raw hex. */
 :root {
   color-scheme: light;
-  --bg: #f4f5f2;
+  --bg: #f6f7f9;
   --surface: #ffffff;
-  --surface-2: #eceee9;
-  --border: #d4d7d0;
-  --text: #16181a;
-  --text-muted: #5b6168;
+  --surface-2: #f1f3f6;
+  --border: #e3e6eb;
+  --text: #0b1220;
+  --text-muted: #5b6472;
 
   /* status: reserved for event state, always with glyph + label */
   --ok: #1e7f4f;

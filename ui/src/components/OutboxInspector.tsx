@@ -18,14 +18,14 @@ export function OutboxInspector({ messages, onReview, note }: {
   }, [messages, query, flaggedOnly]);
 
   return (
-    <section className="rounded border border-line bg-surface" aria-label="Outbox inspector">
+    <section className="rounded-xl border border-line bg-surface" aria-label="Outbox inspector">
       <div className="flex flex-wrap items-center gap-2 border-b border-line px-3 py-2">
         <h2 className="text-[13px] font-semibold">Outbox</h2>
         <span className="text-[12px] text-muted">what an attacker's inbox would have received · nothing is actually sent</span>
         <div className="ml-auto flex items-center gap-2">
           <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search recipient, run, text…"
                  aria-label="Search outbox"
-                 className="w-48 rounded border border-line bg-surface-2 px-2 py-1 text-[12px]" />
+                 className="w-48 rounded-xl border border-line bg-surface-2 px-2 py-1 text-[12px]" />
           <label className="flex items-center gap-1 text-[12px] text-muted">
             <input type="checkbox" checked={flaggedOnly} onChange={(e) => setFlaggedOnly(e.target.checked)} />
             flagged only

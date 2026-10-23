@@ -23,7 +23,7 @@ export function Scoreboard({ data }: { data: Latest }) {
         <span className="text-[12px] text-muted">
           batch {data.batch} · {data.models.length} models · up to {data.trials} trial{data.trials > 1 ? "s" : ""} · recorded {data.last_run.slice(0, 10)}
         </span>
-        <div role="tablist" className="ml-auto flex rounded border border-line bg-surface-2 p-0.5 text-[12px]">
+        <div role="tablist" className="ml-auto flex rounded-xl border border-line bg-surface-2 p-0.5 text-[12px]">
           {(["chart", "table"] as const).map((v) => (
             <button key={v} role="tab" aria-selected={view === v} onClick={() => setView(v)}
                     className={`rounded px-2 py-0.5 ${view === v ? "bg-surface shadow-[0_0_0_1px_var(--border)]" : "text-muted"}`}>
@@ -41,7 +41,7 @@ export function Scoreboard({ data }: { data: Latest }) {
                        values={correct} models={answered} label={label} />
         </div>
       ) : (
-        <div className="overflow-x-auto rounded border border-line bg-surface">
+        <div className="overflow-x-auto rounded-xl border border-line bg-surface">
           <table className="w-full min-w-[680px] text-left text-[12px]">
             <thead className="border-b border-line text-muted">
               <tr>
@@ -79,8 +79,8 @@ export function Scoreboard({ data }: { data: Latest }) {
         even if spelled out, reversed or encoded. Two normal questions can't be answered with the wall on, by design: they ask
         about the hidden values themselves ({data.notes.expected_unanswerable_under_wall.join(", ")}), so they're left out of
         the correctness chart and counted as the wall's cost.
-        {Object.keys(partial).length > 0 && <> Models marked <strong>(partial)</strong> were stopped early by free-tier
-        quotas ({Object.entries(partial).map(([m, p]) => `${shortModel(m)}: ${p.done} of ${p.expected} case-mode pairs`).join("; ")}).</>}
+        {Object.keys(partial).length > 0 && <> Models marked <strong>(partial)</strong> haven't covered the full suite yet
+        (stopped by a free-tier quota, or still running: {Object.entries(partial).map(([m, p]) => `${shortModel(m)}: ${p.done} of ${p.expected} case-mode pairs`).join("; ")}).</>}
       </p>
     </section>
   );

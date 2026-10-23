@@ -78,7 +78,7 @@ export function ArchitectureCanvas({ mode, lastEvent }: { mode: Mode; lastEvent?
   const glassColor = d.glass ? (lastEvent?.event_type === "query_denied" ? TONE.amber : TONE.green) : walled ? "var(--ok)" : "var(--border)";
 
   return (
-    <figure className="rounded border border-line bg-surface p-3">
+    <figure className="rounded-xl border border-line bg-surface p-3">
       <figcaption className="mb-1 flex items-center justify-between text-[12px] text-muted">
         <span className="font-medium">How the data flows · {MODE_LABEL[mode]}</span>
         <span>{walled ? "Glass wall ON" : "No wall: the agent can see real data"}</span>
