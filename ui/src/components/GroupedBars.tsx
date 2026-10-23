@@ -54,13 +54,21 @@ export function GroupedBars({ title, subtitle, values, models, label = shortMode
         ))}
         {models.map((md, gi) => {
           const gx = left + gi * groupW + (groupW - (3 * barW + 4)) / 2;
+          if (MODES.every((m) => values[md]?.[m] == null)) {
+            return (
+              <g key={md}>
+                <text x={left + gi * groupW + groupW / 2} y={top + plotH / 2} textAnchor="middle" fontSize={11} fill="var(--text-muted)">not run yet</text>
+                <text x={left + gi * groupW + groupW / 2} y={H - 10} textAnchor="middle" fontSize={11} fill="var(--text-muted)">{label(md)}</text>
+              </g>
+            );
+          }
           return (
             <g key={md}>
               {MODES.map((m, si) => {
                 const v = values[md]?.[m];
                 const x = gx + si * (barW + 2);
                 if (v == null) {
-                  return <text key={m} x={x + barW / 2} y={top + plotH - 4} textAnchor="middle" fontSize={9} fill="var(--text-muted)">n/a</text>;
+                  return <text key={m} x={x + barW / 2} y={top + plotH - 4} textAnchor="middle" fontSize={10} fill="var(--text-muted)">–</text>;
                 }
                 return (
                   <g key={m} onMouseEnter={() => setHover({ model: md, mode: m, x: x + barW / 2, y: y(v) })}
@@ -69,7 +77,7 @@ export function GroupedBars({ title, subtitle, values, models, label = shortMode
                     <rect x={x - 1} y={top} width={barW + 2} height={plotH} fill="transparent" />
                     <path d={bar(x, v)} fill={MODE_VAR[m]} opacity={hover && (hover.model !== md || hover.mode !== m) ? 0.45 : 1} />
                     {v === 0 && <rect x={x} y={top + plotH - 2} width={barW} height={2} fill={MODE_VAR[m]} />}
-                    <text x={x + barW / 2} y={y(v) - 4} textAnchor="middle" fontSize={10} fontWeight={500} fill="var(--text)">
+                    <text x={x + barW / 2} y={y(v) - 5} textAnchor="middle" fontSize={12} fontWeight={700} fill="var(--text)">
                       {Math.round(v)}
                     </text>
                   </g>

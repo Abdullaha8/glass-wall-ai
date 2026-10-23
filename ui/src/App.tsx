@@ -11,6 +11,7 @@ import { BeforeAfter } from "./components/landing/BeforeAfter";
 import { Footer } from "./components/landing/Footer";
 import { Hero, type HeadlineStats } from "./components/landing/Hero";
 import { HowItWorks } from "./components/landing/HowItWorks";
+import { KeyResults } from "./components/landing/KeyResults";
 import { Nav } from "./components/landing/Nav";
 import { Section } from "./components/landing/Section";
 import * as api from "./lib/api";
@@ -276,6 +277,7 @@ export default function App() {
         <div className="border-t border-line bg-surface">
           <Section id="results" eyebrow="Results" title="Measured, not claimed"
                    lead="Real agents, real attacks, three setups: no wall, rules in the prompt, and Glass Wall. Leaks are scored against every real value, including spelled-out, reversed and encoded forms.">
+            <KeyResults stats={headline} />
             {latest ? <Scoreboard data={latest} /> : (
               <p className="text-[13px] text-muted">No recorded results found. Run <code className="font-mono">python -m glasswall.export</code>.</p>
             )}

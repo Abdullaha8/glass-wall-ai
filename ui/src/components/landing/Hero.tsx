@@ -1,3 +1,5 @@
+import { HeroVisual } from "./HeroVisual";
+
 export interface HeadlineStats {
   wallLeak: number | null;
   noWallLeak: [number, number] | null;   // min–max across models
@@ -42,26 +44,24 @@ export function Hero({ stats, onTryLive }: { stats: HeadlineStats; onTryLive: ()
           </div>
         </div>
 
-        <div className="relative mx-auto w-full max-w-[420px]">
-          <div aria-hidden className="absolute inset-6 rounded-[80px] bg-purple-500/30 blur-3xl" />
-          <img src="/mark.svg" alt="A person passes through a glass pane and comes out as token blocks"
-               className="relative w-full drop-shadow-[0_30px_60px_rgba(0,0,0,0.45)]" />
+        <div className="relative mx-auto w-full max-w-[520px]">
+          <HeroVisual />
         </div>
       </div>
 
       {/* stat strip: measured, not claimed */}
       <div className="relative border-t border-purple-400/15 bg-purple-900/10">
-        <dl className="mx-auto grid max-w-[1200px] grid-cols-2 gap-y-6 px-4 py-8 sm:px-6 lg:grid-cols-4">
+        <dl className="mx-auto grid max-w-[1200px] grid-cols-2 gap-y-8 px-4 py-10 sm:px-6 lg:grid-cols-4">
           {[
             [fmt(stats.wallLeak), "of attacks leaked data with Glass Wall", `${stats.wallRuns} runs, ${stats.models} models`, "text-purple-300"],
             [stats.noWallLeak ? `${Math.round(stats.noWallLeak[0])}–${Math.round(stats.noWallLeak[1])}%` : "—", "leaked with no wall", "same agents, same attacks", "text-[#fb7185]"],
-            [stats.rulesLeakMax == null ? "—" : `up to ${Math.round(stats.rulesLeakMax)}%`, "leaked when the model was only told “never reveal”", "rules in the prompt", "text-[#fbbf24]"],
+            [stats.rulesLeakMax == null ? "—" : `≤${Math.round(stats.rulesLeakMax)}%`, "leaked when the model was only told “never reveal”", "rules in the prompt", "text-[#fbbf24]"],
             [fmt(stats.wallCorrect), "of everyday questions still answered correctly", "with Glass Wall on", "text-white"],
           ].map(([value, label, sub, color]) => (
             <div key={label} className="px-2">
               <dt className="sr-only">{label}</dt>
-              <dd className={`font-mono text-[32px] font-semibold leading-none tracking-[-0.02em] ${color}`}>{value}</dd>
-              <dd className="mt-2 text-[14px] text-slate-200">{label}</dd>
+              <dd className={`font-mono text-[40px] font-semibold leading-none tracking-[-0.03em] sm:text-[52px] ${color}`} style={{ textShadow: "0 0 32px currentColor" }}>{value}</dd>
+              <dd className="mt-3 text-[15px] font-medium text-slate-100">{label}</dd>
               <dd className="text-[12px] text-slate-400">{sub}</dd>
             </div>
           ))}

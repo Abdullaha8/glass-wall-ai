@@ -35,17 +35,17 @@ export function Nav({ onTryLive }: { onTryLive: () => void }) {
   return (
     <header className="fixed inset-x-0 top-3 z-40 px-3">
       <nav aria-label="Main"
-           className={`mx-auto flex max-w-[1120px] items-center gap-2 rounded-2xl border px-2.5 py-2 backdrop-blur-xl transition-all duration-300 ${
+           className={`mx-auto flex h-16 max-w-[1200px] items-center gap-3 rounded-2xl border px-3 sm:px-4 backdrop-blur-xl transition-all duration-300 ${
              scrolled ? "border-white/10 bg-[#0d0b13]/85 shadow-[0_10px_40px_rgba(0,0,0,.55)]" : "border-white/10 bg-white/[0.06]"}`}>
         <a href="#top" className="flex items-center gap-2.5 rounded-xl px-2 py-1 text-white">
-          <img src="/logo.svg" width={30} height={30} alt="" className="rounded-[8px] shadow-[0_0_18px_rgba(181,119,243,.45)]" />
-          <span className="text-[15px] font-semibold tracking-[-0.01em]">Glass Wall <span className="text-purple-300">AI</span></span>
+          <img src="/logo.svg" width={36} height={36} alt="" className="rounded-[8px] shadow-[0_0_18px_rgba(181,119,243,.45)]" />
+          <span className="text-[17px] font-semibold tracking-[-0.01em]">Glass Wall <span className="text-purple-300">AI</span></span>
         </a>
 
         <div className="mx-auto hidden items-center gap-1 md:flex">
           {LINKS.map(([label, id]) => (
             <a key={id} href={`#${id}`} aria-current={active === id ? "true" : undefined}
-               className={`rounded-xl px-3.5 py-1.5 text-[14px] font-medium transition-colors ${
+               className={`rounded-xl px-4 py-2 text-[15px] font-medium transition-colors ${
                  active === id ? "bg-purple-400/15 text-purple-100 ring-1 ring-purple-400/30" : "text-slate-300 hover:bg-white/5 hover:text-white"}`}>
               {label}
             </a>
@@ -54,11 +54,11 @@ export function Nav({ onTryLive }: { onTryLive: () => void }) {
 
         <div className="ml-auto flex items-center gap-2 md:ml-0">
           <a href={REPO_URL} target="_blank" rel="noopener noreferrer" aria-label="GitHub repository (opens in a new tab)"
-             className="grid h-9 w-9 place-items-center rounded-xl border border-white/10 text-slate-200 hover:bg-white/10 hover:text-white">
+             className="grid h-10 w-10 place-items-center rounded-xl border border-white/10 text-slate-200 hover:bg-white/10 hover:text-white">
             <GitHubIcon />
           </a>
           <button onClick={onTryLive}
-                  className="rounded-xl px-4 py-2 text-[14px] font-semibold transition bg-gradient-to-r from-purple-400 to-purple-600 text-white shadow-[0_0_28px_rgba(181,119,243,.35)] hover:shadow-[0_0_40px_rgba(181,119,243,.6)]">
+                  className="rounded-xl px-5 py-2.5 text-[15px] font-semibold transition bg-gradient-to-r from-purple-400 to-purple-600 text-white shadow-[0_0_28px_rgba(181,119,243,.35)] hover:shadow-[0_0_40px_rgba(181,119,243,.6)]">
             Try it live
           </button>
         </div>

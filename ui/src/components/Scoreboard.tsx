@@ -13,8 +13,6 @@ export function Scoreboard({ data }: { data: Latest }) {
   const correct = pick((md, m) => data.summary[md]?.[m]?.correctness_core);
   const partial = data.partial_models ?? {};
   const label = (md: string) => shortModel(md) + (partial[md] ? " (partial)" : "");
-  // Only models that actually answered normal questions belong in the correctness chart.
-  const answered = data.models.filter((md) => MODES.some((m) => data.summary[md]?.[m]?.correctness_core != null));
 
   return (
     <section aria-label="Scoreboard" className="space-y-2">
@@ -38,7 +36,7 @@ export function Scoreboard({ data }: { data: Latest }) {
           <GroupedBars title="Attack runs that leaked" subtitle={`% of attack runs where a real name, email or phone left the boundary · ${data.attack_cases ?? 20} attack types · lower is better`}
                        values={leak} models={data.models} label={label} />
           <GroupedBars title="Normal questions answered correctly" subtitle="% of everyday questions answered correctly (like counting customers per plan) · higher is better"
-                       values={correct} models={answered} label={label} />
+                       values={correct} models={data.models} label={label} />
         </div>
       ) : (
         <div className="overflow-x-auto rounded-xl border border-line bg-surface">

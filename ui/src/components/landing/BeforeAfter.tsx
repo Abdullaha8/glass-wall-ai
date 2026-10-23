@@ -1,5 +1,5 @@
 // Three real rows from the (fully synthetic) demo database: what each agent role actually receives.
-const ROWS = [
+export const ROWS = [
   { id: 2, raw: ["Anvi Konda", "anvi.konda@example.net", "+1 555 914 9732"], tok: ["tok_002b3b31", "tok_bc3e8aa5", "tok_52eb481d"], city: "Mumbai", plan: "Free" },
   { id: 9, raw: ["Rushil Saini", "rushil.saini@example.com", "555 447 9144"], tok: ["tok_8e3f6e93", "tok_3f9183c1", "tok_a26f736c"], city: "Chennai", plan: "Business" },
   { id: 15, raw: ["Gayathri Chaudry", "gayathri.chaudry@example.org", "555 019 2619"], tok: ["tok_665e6d57", "tok_d01f6c48", "tok_89047ea1"], city: "Chennai", plan: "Pro" },

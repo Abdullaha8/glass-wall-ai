@@ -10,10 +10,10 @@ import random
 from pathlib import Path
 
 OUT = Path(__file__).resolve().parent
-NAVY_A, NAVY_B = "#0b1220", "#18264a"
+NAVY_A, NAVY_B = "#07050c", "#24113f"      # badge: black into deep purple
 WARM_A, WARM_B = "#ffb36b", "#ff5f7e"      # the person (real data)
-TOKEN_A, TOKEN_B = "#5eead4", "#22c55e"    # the tokens (what the agent sees)
-GLASS = "#e8f3ff"
+TOKEN_A, TOKEN_B = "#dcc2fb", "#9d55e6"    # the tokens (what the agent sees): brand purple
+GLASS = "#f3e8ff"
 
 
 def inside_person(x: float, y: float, cx: float, top: float, s: float) -> bool:
@@ -65,7 +65,7 @@ DEFS = f"""
     <stop offset="0" stop-color="{NAVY_B}"/><stop offset="1" stop-color="{NAVY_A}"/>
   </linearGradient>
   <radialGradient id="glow" cx="0.5" cy="0.45" r="0.6">
-    <stop offset="0" stop-color="#3b82f6" stop-opacity="0.35"/><stop offset="1" stop-color="#3b82f6" stop-opacity="0"/>
+    <stop offset="0" stop-color="#b577f3" stop-opacity="0.40"/><stop offset="1" stop-color="#b577f3" stop-opacity="0"/>
   </radialGradient>
   <linearGradient id="warm" x1="0" y1="0" x2="0" y2="1">
     <stop offset="0" stop-color="{WARM_A}"/><stop offset="1" stop-color="{WARM_B}"/>
@@ -96,7 +96,7 @@ def mark_body(x0: float = 0, y0: float = 0, size: float = 512, small: bool = Fal
     k = size / 512
     grid = "".join(f'<path d="M{v} 40V472M40 {v}H472" stroke="#ffffff" stroke-opacity="0.045" stroke-width="2"/>'
                    for v in range(88, 472, 48)) if not small else ""
-    ticks = (f'<g stroke="#5eead4" stroke-width="{22 if small else 10}" stroke-linecap="round">'
+    ticks = (f'<g stroke="#c99ef8" stroke-width="{22 if small else 10}" stroke-linecap="round">'
              '<path d="M256 22V58M256 454V490M22 256H58M454 256H490"/></g>')
     glass = ('<g>'
              f'<polygon points="232,92 286,70 286,442 232,464" fill="url(#glass)" stroke="#ffffff" '
@@ -130,7 +130,7 @@ def favicon() -> str:
 
 def lockup() -> str:
     text = ('<text x="300" y="168" font-family="Inter, Segoe UI, system-ui, sans-serif" font-size="112" font-weight="800" '
-            'fill="#0b1220" letter-spacing="-3">Glass Wall <tspan fill="#10b981">AI</tspan></text>'
+            'fill="#0b1220" letter-spacing="-3">Glass Wall <tspan fill="#9d55e6">AI</tspan></text>'
             '<text x="304" y="226" font-family="Inter, Segoe UI, system-ui, sans-serif" font-size="30" font-weight="500" '
             'fill="#5b6168">AI agents see your data\'s shape, never your users</text>')
     return svg(1180, 280, mark_body(10, 10, 260) + text)
@@ -142,13 +142,13 @@ def cover() -> str:
                     for i in range(1, 70))
     sans = 'font-family="Inter, Segoe UI, system-ui, sans-serif"'
     text = (f'<text x="540" y="262" {sans} font-size="88" font-weight="800" '
-            'fill="#ffffff" letter-spacing="-2">Glass Wall <tspan fill="#5eead4">AI</tspan></text>'
-            f'<text x="543" y="318" {sans} font-size="27" font-weight="500" fill="#c7d2fe">AI agents see your data\'s shape,</text>'
-            f'<text x="543" y="354" {sans} font-size="27" font-weight="500" fill="#c7d2fe">never your users.</text>'
-            '<g font-family="JetBrains Mono, Consolas, monospace" font-size="20" fill="#94a3b8">'
+            'fill="#ffffff" letter-spacing="-2">Glass Wall <tspan fill="#c99ef8">AI</tspan></text>'
+            f'<text x="543" y="318" {sans} font-size="27" font-weight="500" fill="#dcc2fb">AI agents see your data\'s shape,</text>'
+            f'<text x="543" y="354" {sans} font-size="27" font-weight="500" fill="#dcc2fb">never your users.</text>'
+            '<g font-family="JetBrains Mono, Consolas, monospace" font-size="20" fill="#a69fb5">'
             '<text x="543" y="426">No wall    · 71–85% of attacks leaked</text>'
-            '<text x="543" y="460" fill="#5eead4">Glass Wall · 0% leaked · 100% correct</text>'
-            '<text x="543" y="518" fill="#64748b">MCP · Postgres · LiteLLM · real agents</text></g>')
+            '<text x="543" y="460" fill="#c99ef8">Glass Wall · 0% leaked · 100% correct</text>'
+            '<text x="543" y="518" fill="#6e6680">MCP · Postgres · LiteLLM · real agents</text></g>')
     return svg(1200, 630, '<rect width="1200" height="630" fill="url(#bg)"/>'
                '<rect width="1200" height="630" fill="url(#glow)"/>' + stars + mark_body(60, 95, 440) + text)
 
