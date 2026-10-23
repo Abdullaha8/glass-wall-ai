@@ -2,3 +2,7 @@ node_modules/
 dist/
 public/results/
 *.tsbuildinfo
+
+.vercel
+.env*
+!.env.production

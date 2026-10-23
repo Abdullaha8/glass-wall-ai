@@ -2,7 +2,7 @@
 # Render dashboard (sync: false) or set by deploy/render_deploy.py from .env.
 services:
   - type: web
-    name: glass-wall-api
+    name: glass-wall-ai
     runtime: python
     plan: free
     region: oregon
@@ -35,7 +35,7 @@ services:
         value: "1"
       - key: GUARD_ENABLED
         value: "1"
-      - key: PUBLIC_HOST         # e.g. glass-wall-api.onrender.com
+      - key: PUBLIC_HOST         # e.g. glass-wall-ai.onrender.com
         sync: false
       - key: CORS_ORIGINS        # the Vercel URL, e.g. https://glass-wall-ai.vercel.app
         sync: false
