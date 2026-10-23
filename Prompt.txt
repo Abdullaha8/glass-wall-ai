@@ -1,0 +1,110 @@
+You are a senior systems architect + product designer specializing in secure data systems and high-density telemetry UIs. I will ask you to produce a complete, developer-ready System + UI/UX specification for a hackathon-ready project called "Glass Wall AI" — a zero-trust data sanitization boundary between external LLMs and relational databases. Work step-by-step and deliver concrete artifacts (code snippets, schemas, component specs, test cases, diagrams, and a prioritized MVP backlog) so a single developer can build an end-to-end proof-of-concept in a short timeframe.
+
+Output requirements — produce the following sections, in this order. For each section include the subitems requested. Use clear headers and lists. Provide runnable examples where applicable (SQL, Python, JSON), and provide small, focused code blocks rather than long prose. Provide any UI code as minimal skeletons (Tailwind/CSS tokens and React/HTML stubs). Provide machine- and human-readable artifacts (Mermaid or ASCII diagrams, JSON schemas, log examples).
+
+1. Executive Summary & Brand
+
+- One-paragraph project summary (2–3 sentences).
+- Tagline and logo sketch description (compact, describable so a designer can create a vector).
+- One-line developer scope & constraints (single-developer hackathon, no heavy cloud dependencies).
+
+2. Core Security/Privacy Model (Zero-Trust)
+
+- Short threat model (who, what, how; top 5 threats).
+- Clear policy statement: what data may and may not leave RAW vaults.
+- Deterministic tokenization spec:
+  - SQL expression (Postgres/SQLite) to produce stable tokens using SHA-256 + secret salt.
+  - Example inputs → example tokens (3 examples).
+- DB schema segregation rules:
+  - Minimal DDL for RAW schema and AGENT schema (table + secure view).
+  - Access control notes: roles, privileges, and how agent credentials are scoped.
+- Example SQL DDL and secure-view definitions (runnable SQL).
+
+3. Python MCP (Model Context Protocol) Server & Tooling
+
+- High-level architecture of a native Python MCP server (FastMCP or mcp).
+- Minimal runnable Python code skeletons:
+  - FastMCP server bootstrap
+  - Tool implementations with signatures and behaviors:
+    - run_sql(query: str) -> rows/result metadata (must enforce it queries only AGENT views and must log role)
+    - send_message(recipient: str, body: str) -> outbox record (captures whether tokens or potential raw PII present)
+  - Interceptor / middleware that:
+    - logs execution times
+    - validates DB role and connection user
+    - transforms and tags tokenized values (RGBY tag mapping)
+    - streams telemetry events as JSON to a socket/webhook
+- Example JSON schema for telemetry events and log lines (include fields: timestamp, event_type, agent_id, query_hash, token_count, severity, color_tag).
+- Unit-test sketch for run_sql and send_message with both permitted and forbidden queries.
+
+4. Agent Execution Layer (Model-Agnostic / LiteLLM)
+
+- Recommended runner architecture (LiteLLM + LangChain adapters). Explain how to plug multiple models.
+- Evaluation harness design:
+  - 20 attack vectors (list titles + short descriptions, include prompt-injection, embedded PII, instruction-following traps).
+  - 20 normal QA queries (list).
+  - For each attack/normal, define expected safe behavior and failure signal (e.g., "blocked", "masked token returned", "alert raised").
+- Scoring metrics for evaluation: correctness, privacy violation rate, false positive mask rate, latency, token-leak severity score.
+- Minimal orchestration script sketch that runs model, captures agent tools calls and returns metric summary.
+
+5. UI / UX Design Specification — Light Theme, High-Density Industrial Telemetry
+
+- Visual vibe & accessibility constraints (contrast ratios, monospace usage).
+- Color palette (exact hex codes for background, text, green, red, blue, amber) and mapping to functional states (RGBY mapping).
+- Typography, spacing, and token system (font family, sizes, line-height, grid spacing).
+- Component list + props (Header, Metric Card, Architecture Canvas, Mode Toggle, Live Log Stream/Terminal, Telemetry Event Row, Outbox Inspector).
+- For each component provide:
+  - Purpose, required props/inputs, state variants, and minimal React/Tailwind skeleton (JSX + Tailwind class tokens).
+- Dashboard layout (bento grid): header, 4 metric cards row, center architecture canvas, mode toggles, bottom live log stream. Provide a simple Mermaid or ASCII layout diagram.
+- Logo: concise icon spec for designer (NSEW compass grid + cryptographic barrier in center) and suggested SVG primitives.
+- Interaction patterns:
+  - Mode toggles behavior (No-Wall, Instructions-Only, Glass Wall) and their effects on tools.
+  - How clicking a telemetry row surfaces details and replay of queries.
+  - How to securely view RAW records (must require developer/admin step, do NOT include trivial view in MVP).
+- Telemetry & Live Log UX:
+  - Example of log line formats with color tags using monospace and short examples (3 log lines).
+  - JSON event example for streaming.
+- Accessibility checklist (keyboard nav, ARIA roles for terminal, color-blind friendly palettes) and dark-mode consideration (optional).
+
+6. Telemetry, Alerting & Audit
+
+- Telemetry schema (JSON) and example stream.
+- Alert levels mapping to color codes and suggested UI microcopy.
+- Storage and retention policy for logs and outbox captures (minimal viable retention for hackathon).
+- Outbox inspection UI: how to search and mark false positives.
+
+7. Acceptance Criteria & Test Matrix
+
+- Concrete pass/fail criteria for:
+  - No raw PII leaves RAW schema in any benign or adversarial scenario (list how to prove).
+  - Tokenization determinism (consistent tokens for identical inputs).
+  - Agent can perform counts/grouping across tokens correctly.
+  - Evaluation harness coverage metrics and thresholds for MVP.
+- Provide 10 test cases (SQL queries + expected result / audit signals) and 5 UI acceptance checks.
+
+8. Deliverables, File Organization & Build Plan (MVP)
+
+- Exact files and folders to produce (e.g., sql/schema.sql, python/mcp_server.py, ui/src/components/MetricCard.jsx, assets/logo.svg, tests/eval_suite.json).
+- Minimal README checklist for hackathon demo (5-minute demo script).
+- Prioritized backlog (MVP features, Nice-to-have, Post-hackathon).
+- Approximate timeboxing estimate for single developer (hours per major deliverable).
+
+9. Bonus: Developer Implementation Snippets
+
+- One compact SQL secure view example (Postgres dialect) with tokenization expression and grant statements.
+- One compact Python FastMCP run_sql tool implementation that rejects queries referencing RAW schema.
+- One Mermaid flow diagram showing agent -> MCP -> AGENT view -> RAW with glass wall mediation.
+
+Constraints and hard requirements
+
+- No external cloud-locked features (use Postgres or SQLite, Python, local LLM adapters).
+- Everything must be reproducible locally or on a single small VM.
+- Provide outputs in both human-readable sections and machine-friendly artifacts (code/files/json/snippets).
+
+Formatting instructions for your response
+
+- Use clear section headers and bulleted lists.
+- Provide runnable examples and schemas that a developer can copy-paste and run with minimal modification.
+- When giving code snippets, include the filename and a 1–2 line explanation.
+- End with a concise prioritized checklist that the developer can follow immediately.
+
+Think step-by-step and produce all sections above. Keep each section focused and actionable. Input: (optionally include database choice [postgres|sqlite], LLMs to test, hackathon time budget in hours, and any additional UI constraints).

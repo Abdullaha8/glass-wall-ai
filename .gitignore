@@ -1,0 +1,31 @@
+# Secrets: API keys, DB URLs, tokenization salt
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Node
+node_modules/
+dist/
+.vite/
+
+# Local run artifacts (full transcripts may hold synthetic PII; commit only scored results)
+runs/raw/
+*.log
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
