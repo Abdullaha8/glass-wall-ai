@@ -13,6 +13,7 @@ JOBS = [  # (svg, png, width, height, background)
     ("mark.svg", "mark-512.png", 512, 512, "transparent"),
     ("mark.svg", "mark-600.png", 600, 600, "transparent"),   # Devfolio logo size
     ("favicon.svg", "favicon-64.png", 64, 64, "transparent"),
+    ("favicon-circle.svg", "favicon-circle-180.png", 180, 180, "transparent"),   # site favicon / apple-touch-icon
     ("lockup.svg", "lockup.png", 1180, 280, "#ffffff"),
     ("cover.svg", "cover-1200x630.png", 1200, 630, "transparent"),
 ]
