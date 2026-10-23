@@ -7,13 +7,18 @@ import { LogStream } from "./components/LogStream";
 import { ModeToggle } from "./components/ModeToggle";
 import { OutboxInspector } from "./components/OutboxInspector";
 import { Scoreboard } from "./components/Scoreboard";
+import { ActivityFeed } from "./components/dash/ActivityFeed";
+import { AttackHeatmap } from "./components/dash/AttackHeatmap";
+import { Card, Pill } from "./components/dash/Card";
+import { LeakBars } from "./components/dash/LeakBars";
+import { LiveTile } from "./components/dash/LiveTile";
+import { ModelRanges } from "./components/dash/ModelRanges";
+import { OutcomeDonut } from "./components/dash/OutcomeDonut";
+import { TopBar, type Tab } from "./components/dash/TopBar";
 import { BeforeAfter } from "./components/landing/BeforeAfter";
-import { Footer } from "./components/landing/Footer";
-import { Hero, type HeadlineStats } from "./components/landing/Hero";
+import { type HeadlineStats } from "./components/landing/Hero";
 import { HowItWorks } from "./components/landing/HowItWorks";
 import { KeyResults } from "./components/landing/KeyResults";
-import { Nav } from "./components/landing/Nav";
-import { Section } from "./components/landing/Section";
 import * as api from "./lib/api";
 import {
   shortModel,
@@ -21,12 +26,13 @@ import {
 } from "./lib/types";
 
 const MAIN_MODEL = "groq/openai/gpt-oss-120b";
+const TITLES: Record<Tab, string> = { overview: "Overview", demo: "Live demo", results: "Results", how: "How it works" };
 
 export default function App() {
-  const [view, setView] = useState<"replay" | "live">(
-    new URLSearchParams(location.search).get("view") === "live" ? "live" : "replay",
-  );
-  const [mode, setMode] = useState<Mode>("no_wall");
+  const params = new URLSearchParams(location.search);
+  const [tab, setTab] = useState<Tab>(params.get("view") === "live" ? "demo" : "overview");
+  const [view, setView] = useState<"replay" | "live">(params.get("view") === "live" ? "live" : "replay");
+  const [mode, setMode] = useState<Mode>("glass_wall");
   const [backend, setBackend] = useState<Backend>("waking");
 
   // replay data (static files, always available)
@@ -101,20 +107,15 @@ export default function App() {
     setSelected(null);
   }, [replayForMode]);
 
-  // The replay only plays while someone can see it: demo section on screen, tab visible, not paused.
-  const [demoVisible, setDemoVisible] = useState(false);
+  // The replay only plays while someone can see it: Live demo tab open, browser tab visible, not paused.
   const [tabVisible, setTabVisible] = useState(!document.hidden);
   const [paused, setPaused] = useState(false);
   useEffect(() => {
-    const el = document.getElementById("demo");
-    if (!el) return;
-    const io = new IntersectionObserver(([entry]) => setDemoVisible(entry.isIntersecting), { threshold: 0.15 });
-    io.observe(el);
     const onVis = () => setTabVisible(!document.hidden);
     document.addEventListener("visibilitychange", onVis);
-    return () => { io.disconnect(); document.removeEventListener("visibilitychange", onVis); };
+    return () => document.removeEventListener("visibilitychange", onVis);
   }, []);
-  const playing = view === "replay" && demoVisible && tabVisible && !paused;
+  const playing = view === "replay" && tab === "demo" && tabVisible && !paused;
   useEffect(() => {
     if (!playing) return;
     // ~1 event per second so the data-flow diagram can be followed; loops after a short pause
@@ -123,10 +124,12 @@ export default function App() {
   }, [playing, replayForMode.length]);
 
   const goLive = () => {
+    setTab("demo");
     setView("live");
     setSelected(null);
-    document.getElementById("demo")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
+  const openTab = (t: Tab) => { setTab(t); window.scrollTo({ top: 0 }); };
 
   // Live: poll the active run until it finishes.
   const pollRef = useRef<number | undefined>(undefined);
@@ -155,8 +158,8 @@ export default function App() {
   const runEvents = run ? liveEvents.filter((e) => e.run_id === run.run_id) : [];
   const lastEvent = view === "replay" ? events[events.length - 1] : runEvents[runEvents.length - 1];
   const summary = latest?.summary[replayModel];
-  const wall = summary?.glass_wall;
   const replayOutboxShown = replayOutbox.filter((m) => m.model === replayModel && m.mode === mode);
+  const walled = mode === "glass_wall";
 
   const headline = useMemo<HeadlineStats>(() => {
     const empty: HeadlineStats = { wallLeak: null, noWallLeak: null, rulesLeakMax: null, wallCorrect: null, wallRuns: 0, models: 0 };
@@ -178,37 +181,66 @@ export default function App() {
       models: latest.models.length,
     };
   }, [latest]);
-
-  const card = "rounded-2xl bg-surface shadow-[0_10px_40px_rgba(0,0,0,.35)] ring-1 ring-line";
+  const wallLeaksAll = latest
+    ? Object.values(latest.summary).reduce((n, s) => n + (s.glass_wall ? s.glass_wall.attack_leak_runs + s.glass_wall.normal_leak_runs : 0), 0)
+    : 0;
+  const feed = replayEvents.filter((e) => e.mode === mode);
 
   return (
-    <div className="min-h-screen">
-      <Nav onTryLive={goLive} />
-      <Hero stats={headline} onTryLive={goLive} />
+    <div className="relative min-h-screen overflow-x-hidden bg-black pb-28 text-white">
+      {/* the soft purple floor glow from the reference */}
+      <div aria-hidden className="pointer-events-none fixed inset-x-0 bottom-0 h-[45vh] bg-gradient-to-t from-purple-900/40 via-purple-900/10 to-transparent" />
 
-      <main>
-        <Section eyebrow="What the agent sees" title="Same customers, same query. Only one of them is safe to hand an AI."
-                 lead="These rows are exactly what each agent role receives from the database. With the wall on, every personal field arrives as a token, and the real values stay behind.">
-          <BeforeAfter />
-        </Section>
+      <TopBar tab={tab} onTab={openTab} onRunLive={goLive} />
 
-        <div className="border-y border-line bg-surface">
-          <Section id="how" eyebrow="How it works" title="A wall in the database, not a promise from the model"
-                   lead="Telling a model to never reveal contact details is advice, and advice can be talked around. Glass Wall makes sure there is nothing real to send.">
-            <HowItWorks />
-          </Section>
+      <main className="relative mx-auto max-w-[1360px] px-4 sm:px-6">
+        <div className="flex flex-wrap items-end justify-between gap-4 pb-6 pt-6 sm:pt-8">
+          <div>
+            <h1 className="text-[34px] font-medium tracking-[-0.03em] sm:text-[44px]">{TITLES[tab]}</h1>
+            {tab === "overview" && (
+              <p className="mt-1 text-[14px] text-slate-400">AI agents see your data's shape, never your users. Measured on {latest?.models.length ?? "…"} models.</p>
+            )}
+          </div>
+          <label className="flex cursor-pointer items-center gap-3 text-[14px] text-slate-300">
+            {walled ? "Glass Wall on" : mode === "instructions_only" ? "Rules in the prompt" : "Glass Wall off"}
+            <button role="switch" aria-checked={walled} onClick={() => setMode(walled ? "no_wall" : "glass_wall")}
+                    className={`relative h-7 w-12 rounded-full transition-colors ${walled ? "bg-purple-400 shadow-[0_0_18px_rgba(181,119,243,.6)]" : "bg-white/15"}`}>
+              <span className={`absolute top-1 h-5 w-5 rounded-full bg-white transition-all ${walled ? "left-6" : "left-1"}`} />
+            </button>
+          </label>
         </div>
 
-        <Section id="demo" eyebrow="Live demo" title="Watch real agents try to leak data"
-                 lead={view === "replay"
-                   ? "Replaying recorded runs. Switch modes to see the same attacks with and without the wall, or go live to run an agent yourself."
-                   : "Run a real agent against the deployed MCP server. Pick a mode and an attack, and watch every query and message as it happens."}>
-          <div className={`${card} p-4 sm:p-5`}>
+        {tab === "overview" && latest && (
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
+            <Card className="lg:col-span-5" title="Attacks that leaked" right={<Pill>{latest.attack_cases} attack types</Pill>}>
+              <LeakBars data={latest} />
+            </Card>
+            <Card className="lg:col-span-4" title="Under Glass Wall" right={<Pill>{Object.values(latest.wall_outcomes ?? {}).reduce((a, b) => a + b, 0)} attacks</Pill>}>
+              {latest.wall_outcomes && <OutcomeDonut outcomes={latest.wall_outcomes} />}
+            </Card>
+            <Card className="lg:col-span-3" title="Activity" right={<Pill>{walled ? "Glass Wall" : "no wall"}</Pill>}>
+              <ActivityFeed events={feed} />
+            </Card>
+
+            <Card className="lg:col-span-3" title="Leak rate by model">
+              <ModelRanges data={latest} />
+            </Card>
+            <Card className="lg:col-span-6" title="Every attack, every setup" right={<Pill>all models</Pill>}>
+              <AttackHeatmap data={latest} />
+            </Card>
+            <div className="lg:col-span-3">
+              <LiveTile wallRuns={headline.wallRuns} wallLeaks={wallLeaksAll} onRunLive={goLive} />
+            </div>
+          </div>
+        )}
+
+        {tab === "demo" && (
+          <Card>
             <div className="flex flex-wrap items-center gap-3">
-              <div role="tablist" aria-label="View" className="flex rounded-lg bg-surface-2 p-1">
+              <div role="tablist" aria-label="View" className="flex rounded-xl bg-white/[0.06] p-1">
                 {(["replay", "live"] as const).map((v) => (
                   <button key={v} role="tab" aria-selected={view === v} onClick={() => { setView(v); setSelected(null); }}
-                          className={`rounded-md px-3.5 py-1.5 text-[13px] font-semibold ${view === v ? "bg-surface text-ink shadow-sm" : "text-muted hover:text-ink"}`}>
+                          className={`rounded-lg px-3.5 py-1.5 text-[13px] font-medium ${view === v ? "bg-white/10 text-white" : "text-slate-400 hover:text-white"}`}>
                     {v === "replay" ? "Replay recorded runs" : "Run it live"}
                   </button>
                 ))}
@@ -218,27 +250,27 @@ export default function App() {
               </div>
               {view === "replay" && latest && (
                 <select value={replayModel} onChange={(e) => setReplayModel(e.target.value)} aria-label="Model"
-                        className="rounded-lg border border-line bg-surface-2 px-3 py-2 text-[13px] text-ink">
+                        className="rounded-xl border border-white/10 bg-white/[0.06] px-3 py-2 text-[13px] text-white">
                   {latest.models.map((m) => <option key={m} value={m}>{shortModel(m)}{latest.partial_models?.[m] ? " (partial)" : ""}</option>)}
                 </select>
               )}
               {view === "replay" && (
                 <button onClick={() => setPaused((p) => !p)} aria-pressed={paused}
-                        className="rounded-lg border border-line px-3 py-2 text-[13px] font-medium text-ink hover:bg-surface-2">
-                  {paused ? "▶ Play replay" : playing ? "⏸ Pause replay" : "⏸ Paused while off-screen"}
+                        className="rounded-xl border border-white/10 px-3 py-2 text-[13px] text-white hover:bg-white/10">
+                  {paused ? "▶ Play" : "⏸ Pause"}
                 </button>
               )}
-              <span className="ml-auto flex items-center gap-2 text-[12px] text-muted" aria-live="polite">
-                <span className={`inline-block h-2 w-2 rounded-full ${backend === "up" ? "bg-ok" : backend === "waking" ? "animate-pulse bg-warn" : "bg-muted"}`} aria-hidden />
+              <span className="ml-auto flex items-center gap-2 text-[12px] text-slate-400" aria-live="polite">
+                <span className={`inline-block h-2 w-2 rounded-full ${backend === "up" ? "bg-ok" : backend === "waking" ? "animate-pulse bg-warn" : "bg-slate-500"}`} aria-hidden />
                 {backend === "up" ? "live backend ready" : backend === "waking" ? "waking live backend (~40 s)" : "live backend offline, replay still works"}
               </span>
             </div>
 
             {view === "replay" && summary && (
-              <p className="mt-3 text-[13px] text-muted">
-                {shortModel(replayModel)}: with Glass Wall <strong className="text-ink">{wall?.attack_leak_runs ?? 0} of {wall?.attack_runs ?? 0}</strong> attacks
-                leaked · no wall <strong className="text-ink">{summary.no_wall?.attack_leak_runs ?? 0} of {summary.no_wall?.attack_runs ?? 0}</strong> ·
-                rules in the prompt <strong className="text-ink">{summary.instructions_only?.attack_leak_runs ?? 0} of {summary.instructions_only?.attack_runs ?? 0}</strong>
+              <p className="mt-3 text-[13px] text-slate-400">
+                {shortModel(replayModel)}: Glass Wall <strong className="text-white">{summary.glass_wall?.attack_leak_runs ?? 0} of {summary.glass_wall?.attack_runs ?? 0}</strong> attacks
+                leaked · no wall <strong className="text-white">{summary.no_wall?.attack_leak_runs ?? 0} of {summary.no_wall?.attack_runs ?? 0}</strong> ·
+                rules in the prompt <strong className="text-white">{summary.instructions_only?.attack_leak_runs ?? 0} of {summary.instructions_only?.attack_runs ?? 0}</strong>
               </p>
             )}
 
@@ -252,8 +284,8 @@ export default function App() {
                   <LiveControls mode={mode} models={models} cases={cases} model={liveModel} onModel={setLiveModel}
                                 run={run} runEvents={runEvents} onRun={startRun} error={runError} ready={backend === "up"} />
                 ) : (
-                  <div className="rounded-xl bg-surface-2 p-4 text-[13px] leading-relaxed text-muted">
-                    <p className="font-semibold text-ink">Reading the replay</p>
+                  <div className="rounded-xl bg-white/[0.04] p-4 text-[13px] leading-relaxed text-slate-400 ring-1 ring-white/[0.06]">
+                    <p className="font-medium text-white">Reading the replay</p>
                     <p className="mt-2"><span className="text-leak">■ red</span>: real personal data left a tool.</p>
                     <p><span className="text-ok">● green</span>: tokens only.</p>
                     <p><span className="text-warn">▲ amber</span>: blocked, the wall held.</p>
@@ -271,21 +303,39 @@ export default function App() {
                 : <OutboxInspector messages={outbox}
                                    onReview={(id, r) => api.reviewOutbox(id, r).then(refreshOutbox).catch(() => {})} />}
             </div>
-          </div>
-        </Section>
+          </Card>
+        )}
 
-        <div className="border-t border-line bg-surface">
-          <Section id="results" eyebrow="Results" title="Measured, not claimed"
-                   lead="Real agents, real attacks, three setups: no wall, rules in the prompt, and Glass Wall. Leaks are scored against every real value, including spelled-out, reversed and encoded forms.">
+        {tab === "results" && (
+          <div>
             <KeyResults stats={headline} />
-            {latest ? <Scoreboard data={latest} /> : (
-              <p className="text-[13px] text-muted">No recorded results found. Run <code className="font-mono">python -m glasswall.export</code>.</p>
+            {latest ? <Card><Scoreboard data={latest} /></Card> : (
+              <p className="text-[13px] text-slate-400">No recorded results found. Run <code className="font-mono">python -m glasswall.export</code>.</p>
             )}
-          </Section>
-        </div>
+          </div>
+        )}
+
+        {tab === "how" && (
+          <div className="space-y-4">
+            <Card title="What the agent sees" right={<Pill>same rows, same query</Pill>}>
+              <BeforeAfter />
+            </Card>
+            <Card title="A wall in the database, not a promise from the model">
+              <HowItWorks />
+              <div className="mx-auto mt-5 max-w-[920px]"><ArchitectureCanvas mode={mode} lastEvent={undefined} /></div>
+            </Card>
+          </div>
+        )}
       </main>
 
-      <Footer />
+      {/* floating action, like the reference's "Ask AI" pill */}
+      {!(tab === "demo" && view === "live") && (
+        <button onClick={goLive}
+                className="fixed bottom-6 left-1/2 z-30 flex -translate-x-1/2 items-center gap-2.5 rounded-2xl border border-white/10 bg-[#141119]/90 py-2.5 pl-2.5 pr-5 text-[14px] text-white shadow-[0_10px_40px_rgba(0,0,0,.6)] backdrop-blur-xl hover:bg-[#1c1824]">
+          <span className="grid h-7 w-7 place-items-center rounded-lg bg-gradient-to-br from-purple-300 to-purple-600 text-[12px]">▶</span>
+          Run live
+        </button>
+      )}
 
       <EventDrawer event={selected != null ? events[selected] ?? null : null} onClose={() => setSelected(null)}
                    replayMode={mode} onReplay={view === "live" && backend === "up" ? replayQuery : undefined} />
