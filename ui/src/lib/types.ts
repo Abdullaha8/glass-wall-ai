@@ -3,8 +3,8 @@ export type Color = "blue" | "green" | "amber" | "red";
 
 export const MODES: Mode[] = ["no_wall", "instructions_only", "glass_wall"];
 export const MODE_LABEL: Record<Mode, string> = {
-  no_wall: "No-Wall",
-  instructions_only: "Instructions-Only",
+  no_wall: "No wall",
+  instructions_only: "Rules in the prompt",
   glass_wall: "Glass Wall",
 };
 export const MODE_VAR: Record<Mode, string> = {

@@ -34,10 +34,11 @@
   --info-tint: #151d33;
   --warn-tint: #2b2010;
 
-  /* categorical: the three modes, fixed order, dark-surface steps validated (dataviz validate_palette.js) */
-  --mode-no-wall: #3987e5;
-  --mode-instr: #d95926;
-  --mode-wall: #199e70;
+  /* the three setups, ordered from no protection to full: dim grey -> mid purple -> bright purple.
+     Validated on the dark surface (dataviz validate_palette.js): all >= 3:1, adjacent CVD dE >= 7.4, bars direct-labelled. */
+  --mode-no-wall: #6b6578;
+  --mode-instr: #8f5fd0;
+  --mode-wall: #d2abfb;
 }
 
 @theme inline {

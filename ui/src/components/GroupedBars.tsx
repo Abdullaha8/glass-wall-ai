@@ -6,7 +6,7 @@ type Values = Record<string, Partial<Record<Mode, number | null>>>;
 /**
  * Grouped bars: x = model, series = mode (categorical, fixed order).
  * Marks: 4px rounded data-ends on the baseline, 2px gaps, value labels on every
- * bar (relief for the low-contrast aqua slot), hover tooltip, legend above.
+ * bar, hover tooltip, legend above. Glass Wall bars get the site's purple gradient and glow.
  */
 export function GroupedBars({ title, subtitle, values, models, label = shortModel }: {
   title: string;
@@ -30,7 +30,7 @@ export function GroupedBars({ title, subtitle, values, models, label = shortMode
   };
 
   return (
-    <figure className="relative rounded-xl border border-line bg-surface p-3">
+    <figure className="relative rounded-xl border border-white/[0.08] bg-gradient-to-b from-white/[0.03] to-transparent p-4">
       <figcaption>
         <h3 className="text-[13px] font-semibold">{title}</h3>
         <p className="text-[12px] text-muted">{subtitle}</p>
@@ -44,8 +44,16 @@ export function GroupedBars({ title, subtitle, values, models, label = shortMode
         </ul>
       </figcaption>
 
-      <svg viewBox={`0 0 ${W} ${H}`} className="mt-1 h-auto w-full" role="img"
+      <svg viewBox={`0 0 ${W} ${H}`} className="mt-1 h-auto w-full overflow-visible" role="img"
            aria-label={`${title}: ${models.map((md) => `${shortModel(md)} ${MODES.map((m) => `${MODE_LABEL[m]} ${values[md]?.[m] ?? "n/a"}%`).join(", ")}`).join("; ")}`}>
+        <defs>
+          <linearGradient id="gb-wall" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor="#ecdafe" /><stop offset="1" stopColor="#b577f3" />
+          </linearGradient>
+          <filter id="gb-glow" x="-50%" y="-20%" width="200%" height="140%">
+            <feGaussianBlur stdDeviation="4" result="b" /><feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
+          </filter>
+        </defs>
         {[0, 25, 50, 75, 100].map((t) => (
           <g key={t}>
             <line x1={left} x2={W - right} y1={y(t)} y2={y(t)} stroke="var(--border)" strokeWidth={t === 0 ? 1 : 0.5} />
@@ -75,8 +83,10 @@ export function GroupedBars({ title, subtitle, values, models, label = shortMode
                      onMouseLeave={() => setHover(null)}>
                     {/* hit target taller than the mark */}
                     <rect x={x - 1} y={top} width={barW + 2} height={plotH} fill="transparent" />
-                    <path d={bar(x, v)} fill={MODE_VAR[m]} opacity={hover && (hover.model !== md || hover.mode !== m) ? 0.45 : 1} />
-                    {v === 0 && <rect x={x} y={top + plotH - 2} width={barW} height={2} fill={MODE_VAR[m]} />}
+                    <path d={bar(x, v)} fill={m === "glass_wall" ? "url(#gb-wall)" : MODE_VAR[m]}
+                          filter={m === "glass_wall" ? "url(#gb-glow)" : undefined} opacity={hover && (hover.model !== md || hover.mode !== m) ? 0.45 : 1} />
+                    {v === 0 && <rect x={x} y={top + plotH - 3} width={barW} height={3} rx={1.5} fill={MODE_VAR[m]}
+                                       filter={m === "glass_wall" ? "url(#gb-glow)" : undefined} />}
                     <text x={x + barW / 2} y={y(v) - 5} textAnchor="middle" fontSize={12} fontWeight={700} fill="var(--text)">
                       {Math.round(v)}
                     </text>
