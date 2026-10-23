@@ -27,6 +27,7 @@ from .telemetry import TelemetryBus, make_event
 
 MAX_STEPS = 8
 MODEL_TIMEOUT_S = 90
+LOCAL_MODEL_TIMEOUT_S = 300   # local models (Ollama) think longer on a consumer GPU, esp. when refusing
 RATE_LIMIT_RETRIES = 4
 TRANSCRIPT_DIR = ROOT / "runs" / "raw"   # gitignored: transcripts hold synthetic PII
 
@@ -92,7 +93,8 @@ async def _complete(model: str, messages: list[dict], tools: list[dict]):
     for attempt in range(RATE_LIMIT_RETRIES + 1):
         try:
             return await litellm.acompletion(model=model, messages=messages, tools=tools,
-                                             tool_choice="auto", timeout=MODEL_TIMEOUT_S)
+                                             tool_choice="auto",
+                                             timeout=LOCAL_MODEL_TIMEOUT_S if model.startswith("ollama") else MODEL_TIMEOUT_S)
         except litellm.BadRequestError as e:
             # The provider rejected malformed tool-call JSON from the model; it's sampling noise, retry once.
             if "Failed to parse tool call" in str(e) and bad_tool_json_retries:
