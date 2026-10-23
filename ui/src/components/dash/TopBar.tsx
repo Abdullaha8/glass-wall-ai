@@ -1,8 +1,8 @@
 import { useEffect, useRef } from "react";
 import { GitHubIcon, REPO_URL } from "../landing/Nav";
 
-export type Tab = "overview" | "demo" | "results" | "how";
-const TABS: [Tab, string][] = [["how", "How it works"], ["demo", "Live demo"], ["overview", "Dashboard"], ["results", "Results"]];
+export type Tab = "home" | "overview" | "demo" | "results" | "how";
+const TABS: [Tab, string][] = [["home", "Home"], ["how", "How it works"], ["demo", "Live demo"], ["overview", "Dashboard"], ["results", "Results"]];
 
 function Tabs({ tab, onTab, className = "" }: { tab: Tab; onTab: (t: Tab) => void; className?: string }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -29,7 +29,7 @@ export function TopBar({ tab, onTab, onRunLive }: { tab: Tab; onTab: (t: Tab) =>
   return (
     <header className="sticky top-0 z-40 border-b border-white/[0.06] bg-black/80 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-[1360px] items-center gap-3 px-4 sm:px-6">
-        <button onClick={() => onTab("how")} className="flex shrink-0 items-center gap-2.5">
+        <button onClick={() => onTab("home")} className="flex shrink-0 items-center gap-2.5">
           <img src="/logo.svg" width={34} height={34} alt="" className="rounded-[8px]" />
           <span className="text-[16px] font-medium tracking-[-0.01em]">Glass Wall <span className="text-purple-300">AI</span></span>
         </button>

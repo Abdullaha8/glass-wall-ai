@@ -18,6 +18,7 @@ import { OutcomeDonut } from "./components/dash/OutcomeDonut";
 import { TopBar, type Tab } from "./components/dash/TopBar";
 import { BeforeAfter } from "./components/landing/BeforeAfter";
 import { type HeadlineStats } from "./components/landing/Hero";
+import { HomeHero } from "./components/landing/HomeHero";
 import { HowItWorks } from "./components/landing/HowItWorks";
 import { KeyResults } from "./components/landing/KeyResults";
 import * as api from "./lib/api";
@@ -27,11 +28,11 @@ import {
 } from "./lib/types";
 
 const MAIN_MODEL = "groq/openai/gpt-oss-120b";
-const TITLES: Record<Tab, string> = { overview: "Dashboard", demo: "Live demo", results: "Results", how: "How it works" };
+const TITLES: Record<Tab, string> = { home: "Home", overview: "Dashboard", demo: "Live demo", results: "Results", how: "How it works" };
 
 export default function App() {
   const params = new URLSearchParams(location.search);
-  const [tab, setTab] = useState<Tab>(params.get("view") === "live" ? "demo" : "how");
+  const [tab, setTab] = useState<Tab>(params.get("view") === "live" ? "demo" : "home");
   const [view, setView] = useState<"replay" | "live">(params.get("view") === "live" ? "live" : "replay");
   const [mode, setMode] = useState<Mode>("glass_wall");
   const [backend, setBackend] = useState<Backend>("waking");
@@ -185,6 +186,8 @@ export default function App() {
   const wallLeaksAll = latest
     ? Object.values(latest.summary).reduce((n, s) => n + (s.glass_wall ? s.glass_wall.attack_leak_runs + s.glass_wall.normal_leak_runs : 0), 0)
     : 0;
+  const wallAttackRuns = latest ? Object.values(latest.summary).reduce((n, s) => n + (s.glass_wall?.attack_runs ?? 0), 0) : 0;
+  const wallAttackLeaks = latest ? Object.values(latest.summary).reduce((n, s) => n + (s.glass_wall?.attack_leak_runs ?? 0), 0) : 0;
   const feed = replayEvents.filter((e) => e.mode === mode);
   const outcomesNow = latest?.outcomes?.[mode] ?? (walled ? latest?.wall_outcomes : undefined);
   const outcomesTotal = outcomesNow ? outcomesNow.leaked + outcomesNow.blocked + outcomesNow.refused + outcomesNow.tokens_only : 0;
@@ -197,7 +200,7 @@ export default function App() {
       <TopBar tab={tab} onTab={openTab} onRunLive={goLive} />
 
       <main className="relative mx-auto max-w-[1360px] px-4 sm:px-6">
-        <div className="flex flex-wrap items-end justify-between gap-4 pb-6 pt-6 sm:pt-8">
+        {tab !== "home" && <div className="flex flex-wrap items-end justify-between gap-4 pb-6 pt-6 sm:pt-8">
           <div>
             <h1 className="text-[34px] font-medium tracking-[-0.03em] sm:text-[44px]">{TITLES[tab]}</h1>
             {tab === "overview" && (
@@ -218,7 +221,26 @@ export default function App() {
               <span className={`absolute top-1 h-5 w-5 rounded-full bg-white transition-all ${walled ? "left-6" : "left-1"}`} />
             </button>
           </label>}
-        </div>
+        </div>}
+
+        {tab === "home" && (
+          <div className="space-y-4">
+            <HomeHero walled={walled} onToggle={() => setMode(walled ? "no_wall" : "glass_wall")}
+                      noWall={latest?.outcomes?.no_wall ? { leaked: latest.outcomes.no_wall.leaked, total: latest.outcomes.no_wall.leaked + latest.outcomes.no_wall.blocked + latest.outcomes.no_wall.refused + latest.outcomes.no_wall.tokens_only } : null}
+                      wall={latest ? { leaked: wallAttackLeaks, total: wallAttackRuns } : null}
+                      models={headline.models}
+                      onWatch={() => { setView("replay"); openTab("demo"); }} onLive={goLive} />
+            <Card title="What the agent sees" right={<Pill>same switch ↑</Pill>}>
+              <BeforeAfter walled={walled} />
+            </Card>
+            <button onClick={() => openTab("how")}
+                    className="flex w-full items-center justify-between gap-4 rounded-2xl border border-white/[0.08] bg-white/[0.02] p-5 text-left hover:border-purple-400/40">
+              <span><span className="block text-[17px] font-medium">How does it work?</span>
+                <span className="text-[14px] text-slate-400">Tokens, database roles and a guard, in three steps.</span></span>
+              <span className="shrink-0 whitespace-nowrap text-purple-300">How it works →</span>
+            </button>
+          </div>
+        )}
 
         {tab === "overview" && latest && (
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
