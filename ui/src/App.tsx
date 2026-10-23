@@ -16,8 +16,10 @@ import { LiveTile } from "./components/dash/LiveTile";
 import { ModelRanges } from "./components/dash/ModelRanges";
 import { OutcomeDonut } from "./components/dash/OutcomeDonut";
 import { TopBar, type Tab } from "./components/dash/TopBar";
+import { WallToggle } from "./components/dash/WallToggle";
 import { BeforeAfter } from "./components/landing/BeforeAfter";
 import { type HeadlineStats } from "./components/landing/Hero";
+import { GlassWall } from "./components/landing/GlassWall";
 import { HomeHero } from "./components/landing/HomeHero";
 import { HowItWorks } from "./components/landing/HowItWorks";
 import { KeyResults } from "./components/landing/KeyResults";
@@ -214,24 +216,18 @@ export default function App() {
               </p>
             )}
           </div>
-          {tab !== "results" && <label className="flex cursor-pointer items-center gap-3 text-[14px] text-slate-300">
-            {walled ? "Glass Wall on" : mode === "instructions_only" ? "Rules in the prompt" : "Glass Wall off"}
-            <button role="switch" aria-checked={walled} onClick={() => setMode(walled ? "no_wall" : "glass_wall")}
-                    className={`relative h-7 w-12 rounded-full transition-colors ${walled ? "bg-purple-400 shadow-[0_0_18px_rgba(181,119,243,.6)]" : "bg-white/15"}`}>
-              <span className={`absolute top-1 h-5 w-5 rounded-full bg-white transition-all ${walled ? "left-6" : "left-1"}`} />
-            </button>
-          </label>}
+          {tab !== "results" && <WallToggle walled={walled} onToggle={() => setMode(walled ? "no_wall" : "glass_wall")}
+                                               label={walled ? "Glass Wall on" : mode === "instructions_only" ? "Rules in the prompt" : "Glass Wall off"} />}
         </div>}
 
         {tab === "home" && (
           <div className="space-y-4">
-            <HomeHero walled={walled} onToggle={() => setMode(walled ? "no_wall" : "glass_wall")}
-                      noWall={latest?.outcomes?.no_wall ? { leaked: latest.outcomes.no_wall.leaked, total: latest.outcomes.no_wall.leaked + latest.outcomes.no_wall.blocked + latest.outcomes.no_wall.refused + latest.outcomes.no_wall.tokens_only } : null}
+            <HomeHero noWall={latest?.outcomes?.no_wall ? { leaked: latest.outcomes.no_wall.leaked, total: latest.outcomes.no_wall.leaked + latest.outcomes.no_wall.blocked + latest.outcomes.no_wall.refused + latest.outcomes.no_wall.tokens_only } : null}
                       wall={latest ? { leaked: wallAttackLeaks, total: wallAttackRuns } : null}
                       models={headline.models}
                       onWatch={() => { setView("replay"); openTab("demo"); }} onLive={goLive} />
-            <Card title="What the agent sees" right={<Pill>same switch ↑</Pill>}>
-              <BeforeAfter walled={walled} />
+            <Card title="What the agent sees" right={<Pill>three real rows</Pill>}>
+              <GlassWall initial={60}><BeforeAfter walled={walled} /></GlassWall>
             </Card>
             <button onClick={() => openTab("how")}
                     className="flex w-full items-center justify-between gap-4 rounded-2xl border border-white/[0.08] bg-white/[0.02] p-5 text-left hover:border-purple-400/40">
@@ -355,7 +351,7 @@ export default function App() {
 
         {tab === "how" && (
           <div className="space-y-4">
-            <Card title="What the agent sees" right={<Pill>flip the switch above ↑</Pill>}>
+            <Card title="What the agent sees" right={<Pill>raise the wall above ↑</Pill>}>
               <BeforeAfter walled={walled} />
             </Card>
             <Card title="A wall in the database, not a promise from the model">
