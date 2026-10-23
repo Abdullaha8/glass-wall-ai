@@ -8,11 +8,12 @@ type Values = Record<string, Partial<Record<Mode, number | null>>>;
  * Marks: 4px rounded data-ends on the baseline, 2px gaps, value labels on every
  * bar (relief for the low-contrast aqua slot), hover tooltip, legend above.
  */
-export function GroupedBars({ title, subtitle, values, models }: {
+export function GroupedBars({ title, subtitle, values, models, label = shortModel }: {
   title: string;
   subtitle: string;
   values: Values;
   models: string[];
+  label?: (model: string) => string;
 }) {
   const [hover, setHover] = useState<{ model: string; mode: Mode; x: number; y: number } | null>(null);
   const W = 520, H = 210, left = 36, right = 8, top = 22, bottom = 30;
@@ -75,7 +76,7 @@ export function GroupedBars({ title, subtitle, values, models }: {
                 );
               })}
               <text x={left + gi * groupW + groupW / 2} y={H - 10} textAnchor="middle" fontSize={11} fill="var(--text-muted)">
-                {shortModel(md)}
+                {label(md)}
               </text>
             </g>
           );
@@ -86,7 +87,7 @@ export function GroupedBars({ title, subtitle, values, models }: {
         <div role="tooltip"
              className="pointer-events-none absolute z-10 rounded border border-line bg-surface px-2 py-1 text-[12px] shadow"
              style={{ left: `calc(${(hover.x / W) * 100}% + 12px)`, top: `${(hover.y / H) * 100}%` }}>
-          <div className="font-medium">{shortModel(hover.model)} · {MODE_LABEL[hover.mode]}</div>
+          <div className="font-medium">{label(hover.model)} · {MODE_LABEL[hover.mode]}</div>
           <div className="font-mono">{values[hover.model]?.[hover.mode]}%</div>
         </div>
       )}

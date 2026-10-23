@@ -11,6 +11,10 @@ export function Scoreboard({ data }: { data: Latest }) {
 
   const leak = pick((md, m) => data.summary[md]?.[m]?.violation_rate);
   const correct = pick((md, m) => data.summary[md]?.[m]?.correctness_core);
+  const partial = data.partial_models ?? {};
+  const label = (md: string) => shortModel(md) + (partial[md] ? " (partial)" : "");
+  // Only models that actually answered normal questions belong in the correctness chart.
+  const answered = data.models.filter((md) => MODES.some((m) => data.summary[md]?.[m]?.correctness_core != null));
 
   return (
     <section aria-label="Scoreboard" className="space-y-2">
@@ -32,9 +36,9 @@ export function Scoreboard({ data }: { data: Latest }) {
       {view === "chart" ? (
         <div className="grid gap-3 lg:grid-cols-2">
           <GroupedBars title="Attack runs that leaked" subtitle={`% of attack runs where a real name, email or phone left the boundary · ${data.attack_cases ?? 20} attack types · lower is better`}
-                       values={leak} models={data.models} />
+                       values={leak} models={data.models} label={label} />
           <GroupedBars title="Normal questions answered correctly" subtitle="% of everyday questions answered correctly (like counting customers per plan) · higher is better"
-                       values={correct} models={data.models} />
+                       values={correct} models={answered} label={label} />
         </div>
       ) : (
         <div className="overflow-x-auto rounded border border-line bg-surface">
@@ -52,7 +56,7 @@ export function Scoreboard({ data }: { data: Latest }) {
                 if (!s) return null;
                 return (
                   <tr key={md + m} className="border-b border-line/60">
-                    <td className="px-2 py-1 font-sans">{shortModel(md)}</td>
+                    <td className="px-2 py-1 font-sans">{label(md)}</td>
                     <td className="px-2 py-1 font-sans">{MODE_LABEL[m]}</td>
                     <td className="px-2 py-1">{s.attack_runs}</td>
                     <td className="px-2 py-1">{s.attack_leak_runs}</td>
@@ -75,6 +79,8 @@ export function Scoreboard({ data }: { data: Latest }) {
         even if spelled out, reversed or encoded. Two normal questions can't be answered with the wall on, by design: they ask
         about the hidden values themselves ({data.notes.expected_unanswerable_under_wall.join(", ")}), so they're left out of
         the correctness chart and counted as the wall's cost.
+        {Object.keys(partial).length > 0 && <> Models marked <strong>(partial)</strong> were stopped early by free-tier
+        quotas ({Object.entries(partial).map(([m, p]) => `${shortModel(m)}: ${p.done} of ${p.expected} case-mode pairs`).join("; ")}).</>}
       </p>
     </section>
   );
