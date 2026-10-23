@@ -1,0 +1,45 @@
+# Render blueprint for the backend (free web service). Secrets are entered in the
+# Render dashboard (sync: false) or set by deploy/render_deploy.py from .env.
+services:
+  - type: web
+    name: glass-wall-api
+    runtime: python
+    plan: free
+    region: oregon
+    branch: main
+    buildCommand: pip install -r python/requirements.txt
+    startCommand: cd python && uvicorn glasswall.api:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: GW_DB_HOST          # Neon direct endpoint (no "-pooler")
+        sync: false
+      - key: GW_DB_PORT
+        value: "5432"
+      - key: GW_DB_NAME
+        value: neondb
+      - key: GW_DB_SSLMODE
+        value: require
+      - key: GW_WALL_PW
+        sync: false
+      - key: GW_OPEN_PW
+        sync: false
+      - key: GW_WRITER_PW
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: DEMO_OPEN_ENABLED
+        value: "1"
+      - key: GUARD_ENABLED
+        value: "1"
+      - key: PUBLIC_HOST         # e.g. glass-wall-api.onrender.com
+        sync: false
+      - key: CORS_ORIGINS        # the Vercel URL, e.g. https://glass-wall-ai.vercel.app
+        sync: false
+      - key: LIVE_RUNS_PER_IP_HOUR
+        value: "5"
+      - key: LIVE_RUNS_PER_DAY
+        value: "200"
