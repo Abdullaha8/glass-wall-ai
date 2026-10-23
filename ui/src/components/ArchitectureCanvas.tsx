@@ -20,7 +20,9 @@ function describe(e: TelemetryEvent | undefined, walled: boolean): {
 } {
   const y = mid("agent").y;
   const right = (to: number) => `M${mid("agent").x},${y} H${to}`;
-  if (!e) return { active: [], glass: false, color: TONE.blue, text: "Waiting for activity. Pick a mode and run the agent, or watch the replay." };
+  if (!e) return { active: [], glass: false, color: TONE.blue, text: walled
+    ? "With the wall on, every answer the agent gets carries tokens. The real values never leave the database."
+    : "Without a wall, the agent's queries return real names, emails and phone numbers." };
   const color = TONE[e.color_tag];
   switch (e.event_type) {
     case "query_ok": {

@@ -1,11 +1,20 @@
-/** How Glass Wall attacks ended. Purple = the safe outcome the wall guarantees. */
-export function OutcomeDonut({ outcomes }: { outcomes: { blocked: number; refused: number; tokens_only: number; leaked: number } }) {
-  const items = [
-    { key: "tokens_only", label: "answered with tokens only", value: outcomes.tokens_only, color: "#b577f3" },
-    { key: "blocked", label: "blocked by the database", value: outcomes.blocked, color: "#6a2ea3" },
-    { key: "refused", label: "refused by the model", value: outcomes.refused, color: "#3a3446" },
-    { key: "leaked", label: "leaked real data", value: outcomes.leaked, color: "#f07a70" },
-  ];
+export interface Outcomes { blocked: number; refused: number; tokens_only: number; leaked: number }
+
+/** How attacks ended in one setup. Purple = safe outcomes; red = real data leaked. */
+export function OutcomeDonut({ outcomes, walled }: { outcomes: Outcomes; walled: boolean }) {
+  const items = walled
+    ? [
+        { key: "tokens_only", label: "answered with tokens only", value: outcomes.tokens_only, color: "#b577f3" },
+        { key: "blocked", label: "blocked by the database", value: outcomes.blocked, color: "#6a2ea3" },
+        { key: "refused", label: "refused by the model", value: outcomes.refused, color: "#3a3446" },
+        { key: "leaked", label: "leaked real data", value: outcomes.leaked, color: "#f07a70" },
+      ]
+    : [
+        { key: "leaked", label: "leaked real data", value: outcomes.leaked, color: "#f07a70" },
+        { key: "tokens_only", label: "answered without leaking", value: outcomes.tokens_only, color: "#6e6680" },
+        { key: "refused", label: "refused by the model", value: outcomes.refused, color: "#3a3446" },
+        { key: "blocked", label: "blocked by the database", value: outcomes.blocked, color: "#6a2ea3" },
+      ];
   const total = items.reduce((n, i) => n + i.value, 0) || 1;
   const R = 70, C = 2 * Math.PI * R;
   let offset = 0;
@@ -23,24 +32,27 @@ export function OutcomeDonut({ outcomes }: { outcomes: { blocked: number; refuse
           </li>
         ))}
       </ul>
-      <svg viewBox="0 0 180 180" className="h-auto w-full" role="img"
-           aria-label={items.map((i) => `${i.value} ${i.label}`).join(", ")}>
+      <svg viewBox="0 0 180 180" className="h-auto w-full" role="img" aria-label={items.map((i) => `${i.value} ${i.label}`).join(", ")}>
         <defs>
           <linearGradient id="donut-purple" x1="0" y1="0" x2="1" y2="1">
             <stop offset="0" stopColor="#dcc2fb" /><stop offset="1" stopColor="#9d55e6" />
+          </linearGradient>
+          <linearGradient id="donut-red" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stopColor="#ffb3ab" /><stop offset="1" stopColor="#e2554a" />
           </linearGradient>
         </defs>
         <circle cx="90" cy="90" r={R} fill="none" stroke="#1d1a24" strokeWidth={34} />
         {items.map((i, idx) => {
           const len = (i.value / total) * C;
+          const stroke = idx === 0 ? (walled ? "url(#donut-purple)" : "url(#donut-red)") : i.color;
           const el = len > 0 && (
-            <circle key={i.key} cx="90" cy="90" r={R} fill="none" stroke={idx === 0 ? "url(#donut-purple)" : i.color} strokeWidth={34}
+            <circle key={i.key} cx="90" cy="90" r={R} fill="none" stroke={stroke} strokeWidth={34}
                     strokeDasharray={`${Math.max(0, len - 2)} ${C}`} strokeDashoffset={-offset} transform="rotate(-90 90 90)" />
           );
           offset += len;
           return el;
         })}
-        <text x="90" y="86" textAnchor="middle" fill="#fff" fontSize="28" fontWeight={300}>{outcomes.leaked}</text>
+        <text x="90" y="86" textAnchor="middle" fill={outcomes.leaked ? "#ff8a80" : "#fff"} fontSize="28" fontWeight={300}>{outcomes.leaked}</text>
         <text x="90" y="106" textAnchor="middle" fill="#a69fb5" fontSize="11">leaks</text>
       </svg>
     </div>

@@ -87,7 +87,7 @@ DEFS = f"""
 </defs>"""
 
 
-def mark_body(x0: float = 0, y0: float = 0, size: float = 512, small: bool = False) -> str:
+def mark_body(x0: float = 0, y0: float = 0, size: float = 512, small: bool = False, circle: bool = False) -> str:
     """The badge drawn in a 512 box, translated/scaled into place.
 
     small=True keeps the same composition but drops what vanishes at favicon size:
@@ -111,11 +111,12 @@ def mark_body(x0: float = 0, y0: float = 0, size: float = 512, small: bool = Fal
     person = f'<g fill="url(#warm)">{person_path(140, 172, 1.2)}</g>'
     step, block = (25, 20) if small else (9.5, 7.6)
     tokens = f'<g fill="url(#tok)">{token_blocks(378, 172, 1.2, step, block)}</g>'
+    # badge shape: rounded square (default) or circle; same artwork inside
+    shape = '<circle cx="256" cy="256" r="250" {}/>' if circle else '<rect x="8" y="8" width="496" height="496" rx="116" {}/>'
     return (f'<g transform="translate({x0} {y0}) scale({k})">'
-            '<rect x="8" y="8" width="496" height="496" rx="116" fill="url(#bg)"/>'
-            '<rect x="8" y="8" width="496" height="496" rx="116" fill="url(#glow)"/>'
+            + shape.format('fill="url(#bg)"') + shape.format('fill="url(#glow)"') +
             f'{grid}{ticks}{beam}{person}{tokens}{glass}'
-            + ('' if small else '<rect x="8" y="8" width="496" height="496" rx="116" fill="none" stroke="#ffffff" stroke-opacity="0.12" stroke-width="3"/>') +
+            + ('' if small else shape.format('fill="none" stroke="#ffffff" stroke-opacity="0.12" stroke-width="3"')) +
             '</g>')
 
 
@@ -126,6 +127,11 @@ def svg(w: int, h: int, body: str) -> str:
 def favicon() -> str:
     """Same mark as mark.svg, small-size variant (see mark_body)."""
     return svg(64, 64, mark_body(0, 0, 64, small=True))
+
+
+def favicon_circle() -> str:
+    """Round variant of the favicon: same artwork inside a circle."""
+    return svg(64, 64, mark_body(0, 0, 64, small=True, circle=True))
 
 
 def lockup() -> str:
@@ -156,6 +162,7 @@ def cover() -> str:
 if __name__ == "__main__":
     (OUT / "mark.svg").write_text(svg(512, 512, mark_body()), encoding="utf-8")
     (OUT / "favicon.svg").write_text(favicon(), encoding="utf-8")
+    (OUT / "favicon-circle.svg").write_text(favicon_circle(), encoding="utf-8")
     (OUT / "lockup.svg").write_text(lockup(), encoding="utf-8")
     (OUT / "cover.svg").write_text(cover(), encoding="utf-8")
     print("wrote mark.svg, favicon.svg, lockup.svg, cover.svg")

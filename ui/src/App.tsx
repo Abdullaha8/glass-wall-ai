@@ -27,11 +27,11 @@ import {
 } from "./lib/types";
 
 const MAIN_MODEL = "groq/openai/gpt-oss-120b";
-const TITLES: Record<Tab, string> = { overview: "Overview", demo: "Live demo", results: "Results", how: "How it works" };
+const TITLES: Record<Tab, string> = { overview: "Dashboard", demo: "Live demo", results: "Results", how: "How it works" };
 
 export default function App() {
   const params = new URLSearchParams(location.search);
-  const [tab, setTab] = useState<Tab>(params.get("view") === "live" ? "demo" : "overview");
+  const [tab, setTab] = useState<Tab>(params.get("view") === "live" ? "demo" : "how");
   const [view, setView] = useState<"replay" | "live">(params.get("view") === "live" ? "live" : "replay");
   const [mode, setMode] = useState<Mode>("glass_wall");
   const [backend, setBackend] = useState<Backend>("waking");
@@ -186,6 +186,8 @@ export default function App() {
     ? Object.values(latest.summary).reduce((n, s) => n + (s.glass_wall ? s.glass_wall.attack_leak_runs + s.glass_wall.normal_leak_runs : 0), 0)
     : 0;
   const feed = replayEvents.filter((e) => e.mode === mode);
+  const outcomesNow = latest?.outcomes?.[mode] ?? (walled ? latest?.wall_outcomes : undefined);
+  const outcomesTotal = outcomesNow ? outcomesNow.leaked + outcomesNow.blocked + outcomesNow.refused + outcomesNow.tokens_only : 0;
 
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-black pb-28 text-white">
@@ -199,16 +201,23 @@ export default function App() {
           <div>
             <h1 className="text-[34px] font-medium tracking-[-0.03em] sm:text-[44px]">{TITLES[tab]}</h1>
             {tab === "overview" && (
-              <p className="mt-1 text-[14px] text-slate-400">AI agents see your data's shape, never your users. Measured on {latest?.models.length ?? "…"} models.</p>
+              <p className="mt-1 text-[14px] text-slate-400">Every number below comes from real agent runs. Flip the switch to compare with and without the wall.</p>
+            )}
+            {tab === "how" && (
+              <p className="mt-2 max-w-[760px] text-[16px] leading-relaxed text-slate-300">
+                AI agents are getting direct access to company databases. One instruction hidden in a customer note, or one
+                confident request, and they can leak customers' personal data. Glass Wall sits between the agent and the
+                database so that <span className="text-purple-300">the agent sees the shape of the data, never the people in it.</span>
+              </p>
             )}
           </div>
-          <label className="flex cursor-pointer items-center gap-3 text-[14px] text-slate-300">
+          {tab !== "results" && <label className="flex cursor-pointer items-center gap-3 text-[14px] text-slate-300">
             {walled ? "Glass Wall on" : mode === "instructions_only" ? "Rules in the prompt" : "Glass Wall off"}
             <button role="switch" aria-checked={walled} onClick={() => setMode(walled ? "no_wall" : "glass_wall")}
                     className={`relative h-7 w-12 rounded-full transition-colors ${walled ? "bg-purple-400 shadow-[0_0_18px_rgba(181,119,243,.6)]" : "bg-white/15"}`}>
               <span className={`absolute top-1 h-5 w-5 rounded-full bg-white transition-all ${walled ? "left-6" : "left-1"}`} />
             </button>
-          </label>
+          </label>}
         </div>
 
         {tab === "overview" && latest && (
@@ -216,9 +225,17 @@ export default function App() {
             <Card className="lg:col-span-5" title="Attacks that leaked" right={<Pill>{latest.attack_cases} attack types</Pill>}>
               <LeakBars data={latest} />
             </Card>
-            <Card className="lg:col-span-4" title="Under Glass Wall" right={<Pill>{Object.values(latest.wall_outcomes ?? {}).reduce((a, b) => a + b, 0)} attacks</Pill>}>
-              {latest.wall_outcomes && <OutcomeDonut outcomes={latest.wall_outcomes} />}
-            </Card>
+            <div role="link" tabIndex={0} aria-label={`See the recorded ${walled ? "Glass Wall" : "no-wall"} runs`}
+                 onClick={() => { setView("replay"); openTab("demo"); }}
+                 onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setView("replay"); openTab("demo"); } }}
+                 className="cursor-pointer rounded-2xl text-left lg:col-span-4">
+              <Card className="h-full transition hover:border-purple-400/40 hover:shadow-[0_0_40px_rgba(181,119,243,.15)]"
+                    title={walled ? "Under Glass Wall" : mode === "instructions_only" ? "With rules in the prompt" : "Without a wall"}
+                    right={<span className="text-purple-300">See the runs →</span>}>
+                {outcomesNow && <OutcomeDonut outcomes={outcomesNow} walled={walled} />}
+                <p className="mt-3 text-[12px] text-slate-500">{outcomesTotal} attack runs, all models</p>
+              </Card>
+            </div>
             <Card className="lg:col-span-3" title="Activity" right={<Pill>{walled ? "Glass Wall" : "no wall"}</Pill>}>
               <ActivityFeed events={feed} />
             </Card>
@@ -230,7 +247,8 @@ export default function App() {
               <AttackHeatmap data={latest} />
             </Card>
             <div className="lg:col-span-3">
-              <LiveTile wallRuns={headline.wallRuns} wallLeaks={wallLeaksAll} onRunLive={goLive} />
+              <LiveTile walled={walled} leaks={walled ? wallLeaksAll : outcomesNow?.leaked ?? 0}
+                        runs={walled ? headline.wallRuns : outcomesTotal} onRunLive={goLive} />
             </div>
             <Card className="lg:col-span-12" title="Agents tested" right={<Pill>{latest.models.length} models · {Object.values(latest.summary).reduce((n, x) => n + (x.no_wall?.runs ?? 0) + (x.instructions_only?.runs ?? 0) + (x.glass_wall?.runs ?? 0), 0)} runs</Pill>}>
               <AgentsTable data={latest} />
@@ -321,13 +339,25 @@ export default function App() {
 
         {tab === "how" && (
           <div className="space-y-4">
-            <Card title="What the agent sees" right={<Pill>same rows, same query</Pill>}>
-              <BeforeAfter />
+            <Card title="What the agent sees" right={<Pill>flip the switch above ↑</Pill>}>
+              <BeforeAfter walled={walled} />
             </Card>
             <Card title="A wall in the database, not a promise from the model">
               <HowItWorks />
-              <div className="mx-auto mt-5 max-w-[920px]"><ArchitectureCanvas mode={mode} lastEvent={undefined} /></div>
+              <div className="mx-auto mt-5 max-w-[920px]"><ArchitectureCanvas mode={walled ? "glass_wall" : "no_wall"} lastEvent={undefined} /></div>
             </Card>
+            <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-purple-400/25 bg-purple-900/20 p-6">
+              <div>
+                <p className="text-[20px] font-medium">See it stop real attacks</p>
+                <p className="mt-1 text-[14px] text-slate-400">Watch recorded runs, or run an agent yourself against the live wall.</p>
+              </div>
+              <div className="flex gap-3">
+                <button onClick={() => { setView("replay"); openTab("demo"); }}
+                        className="rounded-xl border border-white/15 px-4 py-2.5 text-[14px] font-medium hover:bg-white/10">Watch recorded runs</button>
+                <button onClick={goLive}
+                        className="rounded-xl bg-purple-400 px-4 py-2.5 text-[14px] font-medium shadow-[0_0_24px_rgba(181,119,243,.45)] hover:bg-purple-300">See it live →</button>
+              </div>
+            </div>
           </div>
         )}
       </main>

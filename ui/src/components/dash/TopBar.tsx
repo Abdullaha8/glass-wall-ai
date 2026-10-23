@@ -1,14 +1,14 @@
 import { GitHubIcon, REPO_URL } from "../landing/Nav";
 
 export type Tab = "overview" | "demo" | "results" | "how";
-const TABS: [Tab, string][] = [["overview", "Overview"], ["demo", "Live demo"], ["results", "Results"], ["how", "How it works"]];
+const TABS: [Tab, string][] = [["how", "How it works"], ["demo", "Live demo"], ["overview", "Dashboard"], ["results", "Results"]];
 
 /** Reference-style top bar: logo left, pill tabs centered with a purple action, GitHub right. */
 export function TopBar({ tab, onTab, onRunLive }: { tab: Tab; onTab: (t: Tab) => void; onRunLive: () => void }) {
   return (
     <header className="sticky top-0 z-40 border-b border-white/[0.06] bg-black/80 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-[1360px] items-center gap-3 px-4 sm:px-6">
-        <button onClick={() => onTab("overview")} className="flex items-center gap-2.5">
+        <button onClick={() => onTab("how")} className="flex items-center gap-2.5">
           <img src="/logo.svg" width={34} height={34} alt="" className="rounded-[8px]" />
           <span className="hidden text-[16px] font-medium tracking-[-0.01em] sm:inline">Glass Wall <span className="text-purple-300">AI</span></span>
         </button>

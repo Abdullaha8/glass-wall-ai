@@ -88,3 +88,5 @@ html, body {
 /* Native dropdown lists: dark background so options are readable (Windows draws them white by default) */
 select { color-scheme: dark; }
 select option, select optgroup { background-color: #1a1722; color: #f4f1fa; }
+
+@keyframes fadein { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }

@@ -79,6 +79,7 @@ export interface Latest {
   attack_cases?: number;
   partial_models?: Record<string, { done: number; expected: number }>;
   wall_outcomes?: { blocked: number; refused: number; tokens_only: number; leaked: number };
+  outcomes?: Record<Mode, { blocked: number; refused: number; tokens_only: number; leaked: number }>;
   summary: Record<string, Partial<Record<Mode, ModeSummary>> & { _utility_cost: number | null }>;
   cases: CaseCell[];
   notes: { leak_definition: string; manual_review: string[]; expected_unanswerable_under_wall: string[] };
