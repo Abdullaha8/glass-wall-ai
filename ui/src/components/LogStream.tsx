@@ -59,7 +59,7 @@ export function LogStream({ events, onSelect, selectedIndex }: {
         </div>
       </div>
       <div ref={box} role="log" aria-live="polite" tabIndex={0} onKeyDown={onKey}
-           className="max-h-[320px] overflow-y-auto font-mono text-[12px] focus-visible:outline-offset-[-2px]">
+           className="h-[300px] overflow-y-auto font-mono text-[12px] focus-visible:outline-offset-[-2px]">
         {rows.length === 0 && <p className="px-3 py-6 text-center font-sans text-[13px] text-muted">No events yet.</p>}
         {rows.map(({ e, i }) => {
           const s = STATUS[e.color_tag];

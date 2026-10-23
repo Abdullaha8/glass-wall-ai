@@ -98,10 +98,34 @@ export default function App() {
   useEffect(() => {
     setPlayed(0);
     setSelected(null);
+  }, [replayForMode]);
+
+  // The replay only plays while someone can see it: demo section on screen, tab visible, not paused.
+  const [demoVisible, setDemoVisible] = useState(false);
+  const [tabVisible, setTabVisible] = useState(!document.hidden);
+  const [paused, setPaused] = useState(false);
+  useEffect(() => {
+    const el = document.getElementById("demo");
+    if (!el) return;
+    const io = new IntersectionObserver(([entry]) => setDemoVisible(entry.isIntersecting), { threshold: 0.15 });
+    io.observe(el);
+    const onVis = () => setTabVisible(!document.hidden);
+    document.addEventListener("visibilitychange", onVis);
+    return () => { io.disconnect(); document.removeEventListener("visibilitychange", onVis); };
+  }, []);
+  const playing = view === "replay" && demoVisible && tabVisible && !paused;
+  useEffect(() => {
+    if (!playing) return;
     // ~1 event per second so the data-flow diagram can be followed; loops after a short pause
     const id = setInterval(() => setPlayed((p) => (p >= replayForMode.length + 3 ? 1 : p + 1)), 1000);
     return () => clearInterval(id);
-  }, [replayForMode]);
+  }, [playing, replayForMode.length]);
+
+  const goLive = () => {
+    setView("live");
+    setSelected(null);
+    document.getElementById("demo")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
   // Live: poll the active run until it finishes.
   const pollRef = useRef<number | undefined>(undefined);
@@ -158,8 +182,8 @@ export default function App() {
 
   return (
     <div className="min-h-screen">
-      <Nav />
-      <Hero stats={headline} />
+      <Nav onTryLive={goLive} />
+      <Hero stats={headline} onTryLive={goLive} />
 
       <main>
         <Section eyebrow="What the agent sees" title="Same customers, same query. Only one of them is safe to hand an AI."
@@ -196,6 +220,12 @@ export default function App() {
                         className="rounded-lg border border-line bg-surface-2 px-3 py-2 text-[13px] text-ink">
                   {latest.models.map((m) => <option key={m} value={m}>{shortModel(m)}{latest.partial_models?.[m] ? " (partial)" : ""}</option>)}
                 </select>
+              )}
+              {view === "replay" && (
+                <button onClick={() => setPaused((p) => !p)} aria-pressed={paused}
+                        className="rounded-lg border border-line px-3 py-2 text-[13px] font-medium text-ink hover:bg-surface-2">
+                  {paused ? "▶ Play replay" : playing ? "⏸ Pause replay" : "⏸ Paused while off-screen"}
+                </button>
               )}
               <span className="ml-auto flex items-center gap-2 text-[12px] text-muted" aria-live="polite">
                 <span className={`inline-block h-2 w-2 rounded-full ${backend === "up" ? "bg-ok" : backend === "waking" ? "animate-pulse bg-warn" : "bg-muted"}`} aria-hidden />

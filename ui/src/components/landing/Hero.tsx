@@ -9,7 +9,7 @@ export interface HeadlineStats {
 
 const fmt = (v: number | null) => (v == null ? "—" : `${Math.round(v)}%`);
 
-export function Hero({ stats }: { stats: HeadlineStats }) {
+export function Hero({ stats, onTryLive }: { stats: HeadlineStats; onTryLive: () => void }) {
   return (
     <div id="top" className="relative overflow-hidden bg-[#0b1220] text-white">
       {/* soft glows, like the logo badge */}
@@ -18,7 +18,7 @@ export function Hero({ stats }: { stats: HeadlineStats }) {
       <div aria-hidden className="pointer-events-none absolute inset-0 opacity-[0.06]"
            style={{ backgroundImage: "linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)", backgroundSize: "48px 48px" }} />
 
-      <div className="relative mx-auto grid max-w-[1200px] items-center gap-12 px-4 pb-16 pt-16 sm:px-6 lg:grid-cols-[1.15fr_0.85fr] lg:pb-24 lg:pt-24">
+      <div className="relative mx-auto grid max-w-[1200px] items-center gap-12 px-4 pb-16 pt-28 sm:px-6 lg:grid-cols-[1.15fr_0.85fr] lg:pb-24 lg:pt-36">
         <div>
           <p className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 font-mono text-[12px] text-slate-300">
             <span className="h-1.5 w-1.5 rounded-full bg-[#5eead4]" /> Open source · MCP · Postgres · Syntax Error 2026
@@ -32,10 +32,11 @@ export function Hero({ stats }: { stats: HeadlineStats }) {
             but every name, email and phone number reaches them as a token. The real values never leave the database.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <a href="#demo" className="rounded-lg bg-[#5eead4] px-5 py-3 text-[15px] font-semibold text-[#0b1220] hover:bg-[#99f6e4]">
+            <button onClick={onTryLive}
+                    className="rounded-xl bg-gradient-to-r from-[#5eead4] to-[#34d399] px-5 py-3 text-[15px] font-semibold text-[#0b1220] shadow-[0_0_30px_rgba(94,234,212,.35)] transition hover:shadow-[0_0_40px_rgba(94,234,212,.6)]">
               Run the live demo
-            </a>
-            <a href="#results" className="rounded-lg border border-white/20 px-5 py-3 text-[15px] font-semibold text-white hover:bg-white/10">
+            </button>
+            <a href="#results" className="rounded-xl border border-white/20 px-5 py-3 text-[15px] font-semibold text-white hover:bg-white/10">
               See the results
             </a>
           </div>

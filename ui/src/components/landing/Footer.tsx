@@ -6,7 +6,7 @@ export function Footer() {
           <img src="/logo.svg" width={26} height={26} alt="" className="rounded-[6px]" />
           <span className="font-semibold">Glass Wall AI</span>
         </span>
-        <a href="https://github.com/Abdullaha8/glass-wall-ai" className="hover:text-white">GitHub</a>
+        <a href="https://github.com/Abdullaha8/glass-wall-ai" target="_blank" rel="noopener noreferrer" className="hover:text-white">GitHub ↗</a>
         <span className="font-mono text-[13px]">MCP endpoint: glass-wall-ai.onrender.com/mcp/wall</span>
         <span className="ml-auto text-[13px] text-slate-400">
           All data is synthetic: example.* emails, 555 phone numbers. Built for Syntax Error 2026.
