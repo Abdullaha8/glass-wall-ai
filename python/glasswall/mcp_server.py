@@ -11,6 +11,7 @@ model and mode as request metadata, which the LLM never sees.
 import asyncio
 import datetime as dt
 import decimal
+import json
 import os
 import time
 from dataclasses import dataclass
@@ -102,7 +103,7 @@ def build_server(mount_key: str, agent_pool: ConnectionPool, writer_pool: Connec
                     "truncated": len(fetched) > MAX_ROWS}
 
     @server.tool(description=RUN_SQL_DESCRIPTION)
-    async def run_sql(query: str, ctx: Context) -> dict:
+    async def run_sql(query: str, ctx: Context) -> str:
         run_id, model, mode = _call_meta(ctx, mount)
         ev = dict(run_id=run_id, model=model, mode=mode, role=role, tool="run_sql", query=query)
         t0 = time.perf_counter()
@@ -110,7 +111,7 @@ def build_server(mount_key: str, agent_pool: ConnectionPool, writer_pool: Connec
         if guard_enabled() and (reason := check_query(query)):
             await bus.publish(make_event("query_blocked", "warn", f"guard blocked: {reason}",
                                          duration_ms=_ms(t0), **ev))
-            return {"error": f"blocked: {reason}"}
+            return _compact({"error": f"blocked: {reason}"})
 
         try:
             result = await asyncio.to_thread(execute, query)
@@ -122,7 +123,7 @@ def build_server(mount_key: str, agent_pool: ConnectionPool, writer_pool: Connec
                                          "warn" if denied else "info",
                                          f"{'wall held · ' if denied else ''}db {state}: {msg}",
                                          duration_ms=_ms(t0), **ev))
-            return {"error": f"db: {state} {msg}"}
+            return _compact({"error": f"db: {state} {msg}"})
 
         text = repr(result["rows"])
         tokens, pii = count_tokens(text), count_pii_patterns(text)
@@ -131,7 +132,7 @@ def build_server(mount_key: str, agent_pool: ConnectionPool, writer_pool: Connec
             "query_ok", severity, f"{result['row_count']} rows · {tokens} tokens · {pii} PII patterns",
             row_count=result["row_count"], token_count=tokens, pii_pattern_count=pii,
             duration_ms=_ms(t0), **ev))
-        return result
+        return _compact(result)
 
     def record(run_id: str, mode: str, model: str, recipient: str, body: str,
                tokens: int, suspected: bool) -> int:
@@ -142,7 +143,7 @@ def build_server(mount_key: str, agent_pool: ConnectionPool, writer_pool: Connec
                 (run_id, mode, model, recipient, body, tokens, suspected)).fetchone()[0]
 
     @server.tool(description=SEND_MESSAGE_DESCRIPTION)
-    async def send_message(recipient: str, body: str, ctx: Context) -> dict:
+    async def send_message(recipient: str, body: str, ctx: Context) -> str:
         run_id, model, mode = _call_meta(ctx, mount)
         t0 = time.perf_counter()
         tokens, pii = count_tokens(body), count_pii_patterns(body)
@@ -154,9 +155,14 @@ def build_server(mount_key: str, agent_pool: ConnectionPool, writer_pool: Connec
             token_count=tokens, pii_pattern_count=pii, duration_ms=_ms(t0),
             recipient=recipient, outbox_id=outbox_id))
         # Neutral receipt, identical in every mode, so the agent can't tell it's being observed.
-        return {"status": "sent", "message_id": outbox_id}
+        return _compact({"status": "sent", "message_id": outbox_id})
 
     return server
+
+
+def _compact(obj: dict) -> str:
+    """Compact JSON: the SDK's default indented output roughly doubles the tokens the model reads."""
+    return json.dumps(obj, separators=(",", ":"), ensure_ascii=False)
 
 
 def _ms(t0: float) -> int:

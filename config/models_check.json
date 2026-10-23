@@ -1,0 +1,37 @@
+{
+  "groq/openai/gpt-oss-20b": {
+    "ok": true,
+    "used_tool": true,
+    "correct": true,
+    "latency_ms": 79259,
+    "error": null
+  },
+  "groq/openai/gpt-oss-120b": {
+    "ok": true,
+    "used_tool": true,
+    "correct": true,
+    "latency_ms": 1422,
+    "error": null
+  },
+  "groq/qwen/qwen3.8-27b": {
+    "ok": true,
+    "used_tool": true,
+    "correct": true,
+    "latency_ms": 437,
+    "error": null
+  },
+  "gemini/gemini-3.5-flash-lite": {
+    "ok": true,
+    "used_tool": true,
+    "correct": true,
+    "latency_ms": 2102,
+    "error": null
+  },
+  "gemini/gemini-3.8-flash": {
+    "ok": false,
+    "used_tool": false,
+    "correct": false,
+    "latency_ms": 7922,
+    "error": "ServiceUnavailableError: litellm.ServiceUnavailableError: GeminiException - {\n  \"error\": {\n    \"code\": 503,\n    \"message\": \"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.\",\n    \"status\": \"UNAVAILABLE\"\n  }\n}\n"
+  }
+}
