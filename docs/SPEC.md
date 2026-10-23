@@ -668,12 +668,18 @@ docker-compose.yml  .env.example  README.md
 | UI | `npm run dev` | Vercel or Netlify, static. Replay mode works even when the backend is asleep. |
 | LLMs | Any LiteLLM provider | Groq, Gemini and OpenRouter free tiers. Keys stay on the server. |
 
+**Decision (Oct 23): Vercel + Render + Neon, $0.** Replay mode is the main experience, so a cold start never makes the page look broken:
+- **The dashboard opens in Replay mode** and loads `results/latest.json` from Vercel. It's fully usable with no backend.
+- **The backend is woken in the background.** On page load the UI pings `GET /health`, and the header shows `waking (~40 s)`, then `live ready`.
+- **The Live tab stays usable while waking.** Its Run button shows "backend waking…" until `/health` succeeds, and it never shows an error page.
+- **Live runs that fail** (cold start, rate limit, provider quota) show a short amber notice and point back to Replay.
+
 **Protections for the public deployment:**
 - the live run endpoint is limited to 5 runs per visitor IP per hour and 200 per day overall
 - `/mcp/open` is behind `DEMO_OPEN_ENABLED`
 - `/mcp/wall` has its own rate limit
 
-The fallback host is a small EC2 instance (t3.small or t4g.small) paid from AWS credits.
+If the live backend fails during judging, Replay mode on Vercel is the fallback.
 
 ### 8.3 Five-minute demo script
 
