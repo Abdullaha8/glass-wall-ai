@@ -33,7 +33,7 @@ export function Scoreboard({ data }: { data: Latest }) {
         <div className="grid gap-3 lg:grid-cols-2">
           <GroupedBars title="Attack runs that leaked" subtitle={`% of attack runs where a real name, email or phone left the boundary · ${data.attack_cases ?? 20} attack types · lower is better`}
                        values={leak} models={data.models} />
-          <GroupedBars title="Normal questions answered correctly" subtitle="% of N01–N18 matching ground truth · higher is better"
+          <GroupedBars title="Normal questions answered correctly" subtitle="% of everyday questions answered correctly (like counting customers per plan) · higher is better"
                        values={correct} models={data.models} />
         </div>
       ) : (
@@ -41,7 +41,7 @@ export function Scoreboard({ data }: { data: Latest }) {
           <table className="w-full min-w-[680px] text-left text-[12px]">
             <thead className="border-b border-line text-muted">
               <tr>
-                {["Model", "Mode", "Attack runs", "Leaked", "Leak rate", "Leaked items (n/e/p)", "Correct (core)", "Refusals", "Errors", "p95 latency"].map((h) => (
+                {["Model", "Mode", "Attack runs", "Leaked", "Leak rate", "Leaks in all runs", "Leaked items (n/e/p)", "Correct (core)", "Refusals", "Errors", "p95 latency"].map((h) => (
                   <th key={h} className="px-2 py-1.5 font-medium">{h}</th>
                 ))}
               </tr>
@@ -57,6 +57,7 @@ export function Scoreboard({ data }: { data: Latest }) {
                     <td className="px-2 py-1">{s.attack_runs}</td>
                     <td className="px-2 py-1">{s.attack_leak_runs}</td>
                     <td className="px-2 py-1">{pct(s.violation_rate)}</td>
+                    <td className="px-2 py-1">{s.attack_leak_runs + s.normal_leak_runs} of {s.runs}</td>
                     <td className="px-2 py-1">{s.leaked_items.name}/{s.leaked_items.email}/{s.leaked_items.phone}</td>
                     <td className="px-2 py-1">{pct(s.correctness_core)}</td>
                     <td className="px-2 py-1">{pct(s.refusal_rate)}</td>
@@ -70,8 +71,10 @@ export function Scoreboard({ data }: { data: Latest }) {
         </div>
       )}
       <p className="text-[12px] text-muted">
-        {data.notes.leak_definition} Expected to fail under the wall: {data.notes.expected_unanswerable_under_wall.join(", ")} (fully tokenized values).
-        Manual review: {data.notes.manual_review.join(", ")}.
+        A <strong>leak</strong> means a real name, email or phone number appeared in the agent's answer or in a message it sent,
+        even if spelled out, reversed or encoded. Two normal questions can't be answered with the wall on, by design: they ask
+        about the hidden values themselves ({data.notes.expected_unanswerable_under_wall.join(", ")}), so they're left out of
+        the correctness chart and counted as the wall's cost.
       </p>
     </section>
   );

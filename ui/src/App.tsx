@@ -93,7 +93,8 @@ export default function App() {
   useEffect(() => {
     setPlayed(0);
     setSelected(null);
-    const id = setInterval(() => setPlayed((p) => (p >= replayForMode.length ? p : p + 1)), 140);
+    // ~1 event per second so the data-flow diagram can be followed; loops after a short pause
+    const id = setInterval(() => setPlayed((p) => (p >= replayForMode.length + 3 ? 1 : p + 1)), 1000);
     return () => clearInterval(id);
   }, [replayForMode]);
 
@@ -120,10 +121,11 @@ export default function App() {
   const replayQuery = (query: string) =>
     startRun({ prompt: `Run exactly this SQL with run_sql and show me the raw result: ${query}` });
 
-  const events = view === "replay" ? replayForMode.slice(0, played) : liveEvents;
+  const events = view === "replay" ? replayForMode.slice(0, Math.min(played, replayForMode.length)) : liveEvents;
   const runEvents = run ? liveEvents.filter((e) => e.run_id === run.run_id) : [];
   const lastEvent = view === "replay" ? events[events.length - 1] : runEvents[runEvents.length - 1];
   const summary = latest?.summary[replayModel];
+  const wall = summary?.glass_wall;
   const replayOutboxShown = replayOutbox.filter((m) => m.model === replayModel && m.mode === mode);
 
   return (
@@ -133,19 +135,19 @@ export default function App() {
       <main className="mx-auto max-w-[1400px] space-y-4 px-4 py-4">
         {view === "replay" ? (
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            <MetricCard label="Leak rate · Glass Wall" value={summary?.glass_wall?.violation_rate ?? null} unit="%"
+            <MetricCard label="Attacks that leaked data · with Glass Wall" value={summary?.glass_wall?.violation_rate ?? null} unit="%"
                         tone={summary?.glass_wall?.violation_rate == null ? undefined : summary.glass_wall.violation_rate === 0 ? "green" : "red"}
                         status={summary?.glass_wall?.violation_rate === 0 ? "WALL HELD" : "LEAK"}
-                        sublabel={`${summary?.glass_wall?.attack_leak_runs ?? "—"} of ${summary?.glass_wall?.attack_runs ?? "—"} attack runs`} />
-            <MetricCard label="Leak rate · No-Wall" value={summary?.no_wall?.violation_rate ?? null} unit="%"
+                        sublabel={wall ? `${wall.attack_leak_runs} of ${wall.attack_runs} attacks · ${wall.attack_leak_runs + wall.normal_leak_runs} leaks in all ${wall.runs} runs` : undefined} />
+            <MetricCard label="Attacks that leaked data · no wall" value={summary?.no_wall?.violation_rate ?? null} unit="%"
                         tone={summary?.no_wall?.violation_rate == null ? undefined : summary.no_wall.violation_rate ? "red" : "green"}
-                        sublabel={`${summary?.no_wall?.attack_leak_runs ?? "—"} of ${summary?.no_wall?.attack_runs ?? "—"} attack runs`} />
-            <MetricCard label="Leak rate · Instructions-Only" value={summary?.instructions_only?.violation_rate ?? null} unit="%"
+                        sublabel={summary?.no_wall ? `${summary.no_wall.attack_leak_runs} of ${summary.no_wall.attack_runs} attacks got real data out` : undefined} />
+            <MetricCard label="Attacks that leaked data · rules in the prompt" value={summary?.instructions_only?.violation_rate ?? null} unit="%"
                         tone={summary?.instructions_only?.violation_rate == null ? undefined : summary.instructions_only.violation_rate ? "red" : "green"}
-                        sublabel="same raw access, security rules in the prompt" />
-            <MetricCard label="Correct answers · Glass Wall" value={summary?.glass_wall?.correctness_core ?? null} unit="%" tone="blue"
-                        status="UTILITY"
-                        sublabel={`N01–N18 · No-Wall ${summary?.no_wall?.correctness_core ?? "—"}% · cost incl. N19–N20: ${summary?._utility_cost ?? "—"}%`} />
+                        sublabel={'Same access as "no wall", but told "never reveal contact details"'} />
+            <MetricCard label="Normal questions answered correctly · with Glass Wall" value={summary?.glass_wall?.correctness_core ?? null} unit="%"
+                        tone="blue" status="STILL USEFUL"
+                        sublabel={summary?.no_wall?.correctness_core != null ? `Without the wall: ${Math.round(summary.no_wall.correctness_core)}%` : undefined} />
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
