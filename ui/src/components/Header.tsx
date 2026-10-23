@@ -7,7 +7,7 @@ const BACKEND_TEXT: Record<Backend, string> = {
 };
 
 export function Logo({ size = 32 }: { size?: number }) {
-  return <img src="/logo.svg" width={size} height={size} alt="" aria-hidden className="rounded-[7px]" />;
+  return <img src="/logo.svg" width={size} height={size} alt="" aria-hidden className="rounded-full" />;
 }
 
 export function Header({ view, onView, backend }: {

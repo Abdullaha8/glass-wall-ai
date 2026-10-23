@@ -38,7 +38,7 @@ export function Nav({ onTryLive }: { onTryLive: () => void }) {
            className={`mx-auto flex h-16 max-w-[1200px] items-center gap-3 rounded-2xl border px-3 sm:px-4 backdrop-blur-xl transition-all duration-300 ${
              scrolled ? "border-white/10 bg-[#0d0b13]/85 shadow-[0_10px_40px_rgba(0,0,0,.55)]" : "border-white/10 bg-white/[0.06]"}`}>
         <a href="#top" className="flex items-center gap-2.5 rounded-xl px-2 py-1 text-white">
-          <img src="/logo.svg" width={36} height={36} alt="" className="rounded-[8px] shadow-[0_0_18px_rgba(181,119,243,.45)]" />
+          <img src="/logo.svg" width={36} height={36} alt="" className="rounded-full shadow-[0_0_18px_rgba(181,119,243,.45)]" />
           <span className="text-[17px] font-semibold tracking-[-0.01em]">Glass Wall <span className="text-purple-300">AI</span></span>
         </a>
 

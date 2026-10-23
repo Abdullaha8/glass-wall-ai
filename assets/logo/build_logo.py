@@ -87,7 +87,7 @@ DEFS = f"""
 </defs>"""
 
 
-def mark_body(x0: float = 0, y0: float = 0, size: float = 512, small: bool = False, circle: bool = False) -> str:
+def mark_body(x0: float = 0, y0: float = 0, size: float = 512, small: bool = False, circle: bool = True) -> str:
     """The badge drawn in a 512 box, translated/scaled into place.
 
     small=True keeps the same composition but drops what vanishes at favicon size:

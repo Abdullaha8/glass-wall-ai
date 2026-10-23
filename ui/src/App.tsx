@@ -374,14 +374,6 @@ export default function App() {
         )}
       </main>
 
-      {/* floating action, like the reference's "Ask AI" pill */}
-      {!(tab === "demo" && view === "live") && (
-        <button onClick={goLive}
-                className="fixed bottom-6 left-1/2 z-30 flex -translate-x-1/2 items-center gap-2.5 rounded-2xl border border-white/10 bg-[#141119]/90 py-2.5 pl-2.5 pr-5 text-[14px] text-white shadow-[0_10px_40px_rgba(0,0,0,.6)] backdrop-blur-xl hover:bg-[#1c1824]">
-          <span className="grid h-7 w-7 place-items-center rounded-lg bg-gradient-to-br from-purple-300 to-purple-600 text-[12px]">▶</span>
-          Run live
-        </button>
-      )}
 
       <EventDrawer event={selected != null ? events[selected] ?? null : null} onClose={() => setSelected(null)}
                    replayMode={mode} onReplay={view === "live" && backend === "up" ? replayQuery : undefined} />
