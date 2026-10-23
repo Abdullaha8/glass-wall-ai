@@ -45,7 +45,7 @@ window.__gw = {
     Object.assign(el.style, {position: 'fixed', inset: '0', zIndex: 9999, background: '#f4f5f2', color: '#16181a',
       display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '18px',
       font: '400 22px Inter, system-ui, sans-serif', textAlign: 'center'});
-    el.innerHTML = `<img src="/logo.svg" width="96" height="96" alt="">
+    el.innerHTML = `<img src="/mark.svg" width="150" height="150" alt="">
       <div style="font:700 56px Inter, system-ui, sans-serif">${title}</div>` +
       lines.map((l, i) => `<div style="${i === 0 ? 'font-size:26px;color:#16181a' : 'font-size:20px;color:#5b6168;font-family:JetBrains Mono, monospace'}">${l}</div>`).join('');
   },

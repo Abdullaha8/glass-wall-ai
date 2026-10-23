@@ -1,5 +1,7 @@
 # Glass Wall AI
 
+![Glass Wall AI](assets/logo/lockup.png)
+
 **AI agents see your data's shape, never your users.**
 
 Glass Wall is a zero-trust boundary between AI agents and a database of personal data. Agents connect through an MCP server and can still count, group and find duplicates, but every name, email and phone number reaches them as a stable token such as `tok_16c87385`. The real values never leave the `raw` schema, and Postgres grants enforce that, not the model's judgement and not our Python code.

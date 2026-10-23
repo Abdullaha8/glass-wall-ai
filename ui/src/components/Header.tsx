@@ -6,18 +6,8 @@ const BACKEND_TEXT: Record<Backend, string> = {
   down: "backend offline · replay only",
 };
 
-export function Logo({ size = 28 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}
-         strokeLinecap="round" aria-hidden>
-      <rect x="3" y="3" width="18" height="18" rx="2" />
-      <path d="M12 1v3M12 20v3M1 12h3M20 12h3" />
-      <path d="M10.5 7v10M13.5 7v10" strokeWidth={1.6} />
-      <path d="M10.5 9.5l3-1.5M10.5 12.5l3-1.5M10.5 15.5l3-1.5" strokeWidth={1} />
-      <circle cx="7" cy="12" r="1.3" fill="var(--info)" stroke="none" />
-      <circle cx="17" cy="12" r="1.3" fill="var(--ok)" stroke="none" />
-    </svg>
-  );
+export function Logo({ size = 32 }: { size?: number }) {
+  return <img src="/logo.svg" width={size} height={size} alt="" aria-hidden className="rounded-[7px]" />;
 }
 
 export function Header({ view, onView, backend }: {
