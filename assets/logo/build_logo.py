@@ -87,27 +87,35 @@ DEFS = f"""
 </defs>"""
 
 
-def mark_body(x0: float = 0, y0: float = 0, size: float = 512) -> str:
-    """The badge drawn in a 512 box, translated/scaled into place."""
+def mark_body(x0: float = 0, y0: float = 0, size: float = 512, small: bool = False) -> str:
+    """The badge drawn in a 512 box, translated/scaled into place.
+
+    small=True keeps the same composition but drops what vanishes at favicon size:
+    no grid, no glass hash strokes, bolder outlines, bigger token blocks.
+    """
     k = size / 512
     grid = "".join(f'<path d="M{v} 40V472M40 {v}H472" stroke="#ffffff" stroke-opacity="0.045" stroke-width="2"/>'
-                   for v in range(88, 472, 48))
-    ticks = ('<g stroke="#5eead4" stroke-width="10" stroke-linecap="round">'
+                   for v in range(88, 472, 48)) if not small else ""
+    ticks = (f'<g stroke="#5eead4" stroke-width="{22 if small else 10}" stroke-linecap="round">'
              '<path d="M256 22V58M256 454V490M22 256H58M454 256H490"/></g>')
     glass = ('<g>'
-             '<polygon points="232,92 286,70 286,442 232,464" fill="url(#glass)" stroke="#ffffff" stroke-opacity="0.65" stroke-width="3"/>'
-             '<path d="M246 108 V448" stroke="#ffffff" stroke-opacity="0.55" stroke-width="4" stroke-linecap="round"/>'
-             '<g stroke="#ffffff" stroke-opacity="0.5" stroke-width="3" stroke-linecap="round">'
-             '<path d="M240 196 L280 178M240 262 L280 244M240 328 L280 310"/></g></g>')
+             f'<polygon points="232,92 286,70 286,442 232,464" fill="url(#glass)" stroke="#ffffff" '
+             f'stroke-opacity="{0.9 if small else 0.65}" stroke-width="{12 if small else 3}"/>'
+             + ('' if small else
+                '<path d="M246 108 V448" stroke="#ffffff" stroke-opacity="0.55" stroke-width="4" stroke-linecap="round"/>'
+                '<g stroke="#ffffff" stroke-opacity="0.5" stroke-width="3" stroke-linecap="round">'
+                '<path d="M240 196 L280 178M240 262 L280 244M240 328 L280 310"/></g>')
+             + '</g>')
     beam = '<rect x="70" y="236" width="372" height="40" fill="url(#beam)" filter="url(#soft)"/>'
     # silhouette height is 140*s; s=1.2 -> 168 px, centred on y=256
     person = f'<g fill="url(#warm)">{person_path(140, 172, 1.2)}</g>'
-    tokens = f'<g fill="url(#tok)">{token_blocks(378, 172, 1.2, 9.5, 7.6)}</g>'
+    step, block = (25, 20) if small else (9.5, 7.6)
+    tokens = f'<g fill="url(#tok)">{token_blocks(378, 172, 1.2, step, block)}</g>'
     return (f'<g transform="translate({x0} {y0}) scale({k})">'
             '<rect x="8" y="8" width="496" height="496" rx="116" fill="url(#bg)"/>'
             '<rect x="8" y="8" width="496" height="496" rx="116" fill="url(#glow)"/>'
             f'{grid}{ticks}{beam}{person}{tokens}{glass}'
-            '<rect x="8" y="8" width="496" height="496" rx="116" fill="none" stroke="#ffffff" stroke-opacity="0.12" stroke-width="3"/>'
+            + ('' if small else '<rect x="8" y="8" width="496" height="496" rx="116" fill="none" stroke="#ffffff" stroke-opacity="0.12" stroke-width="3"/>') +
             '</g>')
 
 
@@ -116,16 +124,8 @@ def svg(w: int, h: int, body: str) -> str:
 
 
 def favicon() -> str:
-    # 64 grid: badge, warm dot, glass pane, 2x3 token blocks. Reads at 16 px.
-    blocks = "".join(f'<rect x="{41 + c * 7}" y="{21 + r * 7}" width="5.5" height="5.5" rx="1.3"/>'
-                     for r in range(3) for c in range(2))
-    return ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">' + DEFS +
-            '<rect x="1" y="1" width="62" height="62" rx="15" fill="url(#bg)"/>'
-            '<circle cx="18" cy="27" r="7" fill="url(#warm)"/>'
-            '<path d="M8 47 A10 9 0 0 1 28 47 Z" fill="url(#warm)"/>'
-            '<polygon points="29,12 36,9 36,53 29,56" fill="#e8f3ff" fill-opacity="0.45" stroke="#ffffff" stroke-opacity="0.8" stroke-width="1.2"/>'
-            f'<g fill="url(#tok)">{blocks}</g>'
-            '</svg>\n')
+    """Same mark as mark.svg, small-size variant (see mark_body)."""
+    return svg(64, 64, mark_body(0, 0, 64, small=True))
 
 
 def lockup() -> str:
