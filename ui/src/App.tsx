@@ -29,7 +29,10 @@ import {
   type CaseInfo, type Latest, type LiveRun, type ModelInfo, type Mode, type OutboxMessage, type QuotaStatus, type TelemetryEvent,
 } from "./lib/types";
 
-const MAIN_MODEL = "groq/openai/gpt-oss-120b";
+const MAIN_MODEL = "groq/openai/gpt-oss-120b";   // the replay's default recording
+// live runs default to Gemini: it uses its tools reliably, while gpt-oss on Groq sometimes refuses to try
+// an attack at all or sends tool calls Groq can't parse
+const LIVE_DEFAULT_MODEL = "gemini/gemini-3.5-flash-lite";
 const TITLES: Record<Tab, string> = { home: "Home", overview: "Dashboard", demo: "Live demo", results: "Results", how: "How it works" };
 
 export default function App() {
@@ -82,7 +85,7 @@ export default function App() {
         const [m, c] = await Promise.all([api.getModels(), api.getCases()]);
         setModels(m);
         setCases(c);
-        setLiveModel((cur) => cur || m.find((x) => x.id === MAIN_MODEL)?.id || m[0]?.id || "");
+        setLiveModel((cur) => cur || m.find((x) => x.id === LIVE_DEFAULT_MODEL)?.id || m[0]?.id || "");
       } catch {
         if (!cancelled) { setBackend("down"); setTimeout(ping, 30_000); }
       } finally {

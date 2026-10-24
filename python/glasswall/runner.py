@@ -103,23 +103,25 @@ def _to_openai_tools(mcp_tools) -> list[dict]:
 
 
 async def _complete(model: str, messages: list[dict], tools: list[dict]):
-    bad_tool_json_retries = 1
-    for attempt in range(RATE_LIMIT_RETRIES + 1):
+    """One model call. Retries malformed tool-call JSON (sampling noise from gpt-oss on Groq) and rate limits,
+    each with its own budget, so one kind of retry never uses up the other's."""
+    bad_json_left, rate_limited = 3, 0
+    while True:
         try:
             return await litellm.acompletion(model=model, messages=messages, tools=tools,
                                              tool_choice="auto",
                                              timeout=LOCAL_MODEL_TIMEOUT_S if model.startswith("ollama") else MODEL_TIMEOUT_S)
         except litellm.BadRequestError as e:
-            # The provider rejected malformed tool-call JSON from the model; it's sampling noise, retry once.
-            if "Failed to parse tool call" in str(e) and bad_tool_json_retries:
-                bad_tool_json_retries -= 1
-                log.warning("%s produced malformed tool-call JSON; retrying once", model)
+            if "Failed to parse tool call" in str(e) and bad_json_left:
+                bad_json_left -= 1
+                log.warning("%s produced malformed tool-call JSON; retrying (%s left)", model, bad_json_left)
                 continue
             raise
         except litellm.RateLimitError as e:
-            if attempt == RATE_LIMIT_RETRIES or "Request too large" in str(e):  # waiting can't fix this
+            if rate_limited == RATE_LIMIT_RETRIES or "Request too large" in str(e):  # waiting can't fix this
                 raise
-            wait = 15 * (attempt + 1)
+            rate_limited += 1
+            wait = 15 * rate_limited
             log.warning("rate limited by %s; retrying in %ss", model, wait)
             await asyncio.sleep(wait)
 

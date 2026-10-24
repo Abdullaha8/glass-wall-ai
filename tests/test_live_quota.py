@@ -63,3 +63,28 @@ def test_calls_are_counted_per_model_for_24_hours():
     r._calls["a"].extend([(time.time() - 90000, 9), (time.time() - 60, 3), (time.time(), 2)])
     assert r.status("ip")["models"]["a"]["calls_24h"] == 5
     assert r.status("ip")["models"]["b"]["calls_24h"] == 0
+
+
+def test_garbled_tool_calls_and_rate_limits_have_separate_retry_budgets(monkeypatch):
+    import asyncio
+
+    import litellm
+
+    from glasswall import runner as r
+    errors = [litellm.BadRequestError("Failed to parse tool call arguments as JSON", model="m", llm_provider="groq")] * 3 \
+        + [litellm.RateLimitError("slow down", model="m", llm_provider="groq")] * 2
+    calls = []
+
+    async def fake(**kw):
+        calls.append(1)
+        if errors:
+            raise errors.pop(0)
+        return "ok"
+
+    async def no_sleep(_):
+        return None
+
+    monkeypatch.setattr(r.litellm, "acompletion", fake)
+    monkeypatch.setattr(r.asyncio, "sleep", no_sleep)
+    assert asyncio.run(r._complete("m", [], [])) == "ok"   # 3 garbled + 2 rate limits, then success
+    assert len(calls) == 6

@@ -31,6 +31,17 @@ function Meter({ level, known }: { level: number; known: boolean }) {
   );
 }
 
+/** Provider errors in plain words; the raw text stays in the telemetry log. */
+function explainError(error: string): string {
+  if (error.includes("Failed to parse tool call"))
+    return "the model sent a garbled tool call (a known quirk of this model on Groq). Nothing leaked. Try again, or pick Gemini.";
+  if (/ratelimit|rate limit|quota|429|resource_exhausted/i.test(error))
+    return "the model's free quota is busy right now. Nothing leaked. Wait a minute, or pick another model.";
+  if (/timeout|timed out/i.test(error))
+    return "the model took too long to answer. Nothing leaked. Try again.";
+  return error;
+}
+
 export function LiveControls({ mode, models, cases, model, onModel, run, runEvents, onRun, error, ready, quota }: {
   mode: Mode;
   models: ModelInfo[];
@@ -123,7 +134,7 @@ export function LiveControls({ mode, models, cases, model, onModel, run, runEven
             <span className="ml-auto font-mono text-muted">{run.run_id}</span>
           </div>
           {run.final && <p className="whitespace-pre-wrap rounded bg-surface-2 p-2">{run.final}</p>}
-          {run.error && <p className="text-warn">Run ended with an error: {run.error}</p>}
+          {run.error && <p className="text-warn">Run ended with an error: {explainError(run.error)}</p>}
           <p className="text-muted">Live verdicts use pattern detection; exact leak scoring runs offline in the eval harness.</p>
         </div>
       )}
