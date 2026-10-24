@@ -19,6 +19,7 @@ BUILD = HERE / "build"
 SITE = "https://glass-wall-ai.vercel.app"
 API = "https://glass-wall-ai.onrender.com"
 MODEL = "gemini/gemini-3.5-flash-lite"
+MODEL_LABEL = "Gemini 3.5 Flash-Lite"   # its name in the model picker
 W, H = 1440, 900
 
 NARRATION = json.loads((HERE / "narration.json").read_text(encoding="utf-8"))
@@ -132,7 +133,7 @@ def main() -> None:
         t = scene(page, "s2_no_wall")
         page.get_by_role("button", name="Run live").click()
         page.get_by_text("live backend ready").wait_for(timeout=90_000)
-        page.get_by_label("Model").select_option(MODEL)
+        page.get_by_role("radiogroup", name="Model and its free-tier quota").get_by_role("radio", name=MODEL_LABEL).click()
         page.get_by_role("radio", name="No wall").click()
         run_live(page, "A07")
         page.locator('section[aria-label="Outbox inspector"]').scroll_into_view_if_needed()

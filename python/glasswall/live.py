@@ -62,6 +62,7 @@ class LiveRunner:
         self._day: deque = deque()
         # what each provider last told us: ready, cooling down (per-minute limit) or out of free quota (daily limit)
         self.model_health: dict[str, dict] = {m: {"state": "unknown", "until": None, "checked": None} for m in allowed_models}
+        self._calls: dict[str, deque] = defaultdict(deque)   # per model: (time, model calls) of each live run, last 24 h
 
     def _note_model(self, model: str, rate_limit: dict | None, error: str | None) -> None:
         now = time.time()
@@ -70,7 +71,7 @@ class LiveRunner:
             if wait is None:
                 wait = _seconds_to_pacific_midnight(now) if rate_limit["daily"] else 60
             state = "out" if rate_limit["daily"] or wait > 600 else "cooling"
-            self.model_health[model] = {"state": state, "until": now + wait, "checked": now}
+            self.model_health[model] = {"state": state, "until": now + wait, "checked": now, "wait_total": wait}
         elif not error:
             self.model_health[model] = {"state": "ready", "until": None, "checked": now}
 
@@ -86,6 +87,13 @@ class LiveRunner:
             if h["until"] and h["until"] <= now:   # the wait is over
                 h = {"state": "ready", "until": None, "checked": h["checked"]}
             h["wait_s"] = round(h["until"] - now) if h["until"] else None
+            # how far the model is back to full: 0 just after a limit was hit, 1 when available
+            h["available"] = round(1 - (h["until"] - now) / h["wait_total"], 3) if h["until"] else 1.0
+            h.pop("wait_total", None)
+            calls = self._calls[m]
+            while calls and now - calls[0][0] > 86400:
+                calls.popleft()
+            h["calls_24h"] = sum(n for _, n in calls)
             models[m] = h
         return {"runs_left": max(0, PER_IP_PER_HOUR - len(q)), "runs_per_hour": PER_IP_PER_HOUR,
                 "next_run_s": round(3600 - (now - q[0])) if len(q) >= PER_IP_PER_HOUR else None,
@@ -139,6 +147,7 @@ class LiveRunner:
         finally:
             self._active = None
         self._note_model(model, result.rate_limit, result.error)
+        self._calls[model].append((time.time(), result.steps))
         summary = asdict(result)
         summary["tool_calls"] = [{"name": c["name"], "arguments": c["arguments"]} for c in summary["tool_calls"]]
         self.runs[run_id] |= {"status": "error" if result.error else "done", **summary}

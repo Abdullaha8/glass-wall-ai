@@ -47,3 +47,19 @@ def test_out_of_quota_model_is_refused_before_spending_a_run():
         r.start("ip", "glass_wall", "a", "A07", None)
     assert e.value.status == 429 and "pick another model" in str(e.value)
     assert r.status("ip")["runs_left"] == r.status("ip")["runs_per_hour"]   # the visitor's budget is untouched
+
+
+def test_availability_refills_as_the_wait_runs_out():
+    r = runner()
+    assert r.status("ip")["models"]["a"]["available"] == 1.0
+    r._note_model("a", {"daily": False, "retry_s": 100}, "RateLimitError")
+    assert r.status("ip")["models"]["a"]["available"] < 0.05
+    r.model_health["a"]["until"] = time.time() + 25   # three quarters of the wait has passed
+    assert 0.7 < r.status("ip")["models"]["a"]["available"] < 0.8
+
+
+def test_calls_are_counted_per_model_for_24_hours():
+    r = runner()
+    r._calls["a"].extend([(time.time() - 90000, 9), (time.time() - 60, 3), (time.time(), 2)])
+    assert r.status("ip")["models"]["a"]["calls_24h"] == 5
+    assert r.status("ip")["models"]["b"]["calls_24h"] == 0

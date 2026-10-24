@@ -6,13 +6,29 @@ const wait = (s: number | null) =>
   s == null ? "" : s < 90 ? `${s} s` : s < 5400 ? `${Math.round(s / 60)} min` : `${Math.round(s / 3600)} h`;
 
 /** One line per model state, in plain words. */
-function health(h: ModelHealth | undefined): { dot: string; text: string; blocked: boolean } {
+function health(h: ModelHealth | undefined): { text: string; blocked: boolean } {
+  const calls = h?.calls_24h ? ` · ${h.calls_24h} model call${h.calls_24h === 1 ? "" : "s"} today` : "";
   switch (h?.state) {
-    case "ready": return { dot: "bg-ok", text: "free quota available", blocked: false };
-    case "cooling": return { dot: "bg-warn", text: `busy, free per-minute limit hit · back in ~${wait(h.wait_s)}`, blocked: true };
-    case "out": return { dot: "bg-leak", text: `free quota used up · back in ~${wait(h.wait_s)}`, blocked: true };
-    default: return { dot: "bg-slate-500", text: "free tier · not used yet this session", blocked: false };
+    case "ready": return { text: `free quota available${calls}`, blocked: false };
+    case "cooling": return { text: `per-minute limit hit · back in ~${wait(h.wait_s)}`, blocked: true };
+    case "out": return { text: `daily free quota used up · back in ~${wait(h.wait_s)}`, blocked: true };
+    default: return { text: "free tier · not used yet today", blocked: false };
   }
+}
+
+// red (used up) -> amber -> purple (available); the fill shows the slice of this scale up to the model's level
+const SCALE = "linear-gradient(90deg, #f07a70 0%, #e0a548 45%, #b577f3 100%)";
+
+/** A model's free-tier meter: full when available, drops to red at a limit and refills as the reset nears. */
+function Meter({ level, known }: { level: number; known: boolean }) {
+  const pct = Math.max(4, Math.round(level * 100));
+  return (
+    <span className="relative block h-2 w-full overflow-hidden rounded-full bg-white/[0.07]" aria-hidden>
+      <span className={`absolute inset-y-0 left-0 rounded-full transition-[width] duration-700 ${known ? "" : "opacity-40"}`}
+            style={{ width: `${pct}%`, backgroundImage: SCALE, backgroundSize: `${(100 / pct) * 100}% 100%`,
+                     boxShadow: level >= 1 && known ? "0 0 10px rgba(181,119,243,.55)" : undefined }} />
+    </span>
+  );
 }
 
 export function LiveControls({ mode, models, cases, model, onModel, run, runEvents, onRun, error, ready, quota }: {
@@ -34,42 +50,37 @@ export function LiveControls({ mode, models, cases, model, onModel, run, runEven
   const leaked = runEvents.some((e) => e.color_tag === "red");
   const held = runEvents.some((e) => e.color_tag === "amber");
   const h = health(quota?.models[model]);
+  // the per-visitor hourly cap is enforced by the backend; it only surfaces here once it's hit
   const noRunsLeft = quota != null && quota.runs_left === 0;
 
   return (
     <section className="space-y-3 rounded-xl border border-line bg-surface p-3" aria-label="Live run">
       <h2 className="text-[13px] font-semibold">Run an agent · {MODE_LABEL[mode]}</h2>
 
-      <div className="grid grid-cols-2 gap-2 rounded-xl border border-purple-400/25 bg-purple-900/15 p-2.5" aria-live="polite" aria-label="Free-tier limits">
-        <div>
-          <p className="text-[11px] uppercase tracking-wide text-slate-400">Your live runs</p>
-          <p className="mt-0.5 text-[20px] font-light leading-none text-white">
-            {quota ? <>{quota.runs_left}<span className="text-[13px] text-slate-400"> of {quota.runs_per_hour} left</span></> : <span className="text-[13px] text-slate-400">checking…</span>}
-          </p>
-          <p className="mt-1 text-[11px] text-slate-400">
-            {noRunsLeft && quota?.next_run_s != null ? `next one in ~${wait(quota.next_run_s)}` : "per hour, per visitor"}
-          </p>
-        </div>
-        <div>
-          <p className="text-[11px] uppercase tracking-wide text-slate-400">Model's free quota</p>
-          <p className="mt-1 flex items-start gap-1.5 text-[12px] leading-snug text-slate-200">
-            <span className={`mt-1 h-2 w-2 shrink-0 rounded-full ${quota ? h.dot : "animate-pulse bg-slate-500"}`} aria-hidden />
-            {quota ? h.text : "checking…"}
-          </p>
-        </div>
+      <div role="radiogroup" aria-label="Model and its free-tier quota" className="space-y-1.5">
+        <p className="flex items-center justify-between text-[12px] text-muted">
+          Model <span className="text-[11px]">free-tier quota</span>
+        </p>
+        {models.map((m) => {
+          const mh = quota?.models[m.id];
+          const info = health(mh);
+          const on = m.id === model;
+          return (
+            <button key={m.id} role="radio" aria-checked={on} disabled={running} onClick={() => onModel(m.id)}
+                    className={`block w-full rounded-xl border px-3 py-2 text-left transition-colors ${
+                      on ? "border-purple-300/60 bg-purple-400/10" : "border-line bg-surface-2 hover:border-white/20"} ${info.blocked ? "opacity-80" : ""}`}>
+              <span className="mb-1.5 flex items-center justify-between gap-2 text-[13px]">
+                <span className={on ? "font-medium text-white" : "text-slate-200"}>{m.label}</span>
+                {on && <span className="text-[11px] text-purple-200">selected</span>}
+              </span>
+              <Meter level={mh?.available ?? 1} known={!!mh && mh.state !== "unknown"} />
+              <span className={`mt-1 block text-[11px] ${info.blocked ? (mh?.state === "out" ? "text-leak" : "text-warn") : "text-slate-400"}`}>
+                {quota ? info.text : "checking…"}
+              </span>
+            </button>
+          );
+        })}
       </div>
-
-      <label className="block text-[12px] text-muted">
-        Model
-        <select value={model} onChange={(e) => onModel(e.target.value)} disabled={running}
-                className="mt-1 block w-full rounded-xl border border-line bg-surface-2 px-2 py-1.5 text-[13px] text-ink">
-          {models.map((m) => {
-            const mh = health(quota?.models[m.id]);
-            return <option key={m.id} value={m.id}>{m.label}{mh.blocked ? " · unavailable for now" : ""}</option>;
-          })}
-        </select>
-      </label>
-
 
       <label className="block text-[12px] text-muted">
         Prompt from the eval suite
@@ -96,7 +107,7 @@ export function LiveControls({ mode, models, cases, model, onModel, run, runEven
       <button disabled={!ready || running || !model || h.blocked || noRunsLeft}
               onClick={() => onRun(custom.trim() ? { prompt: custom.trim() } : { case_id: caseId })}
               className="w-full rounded px-3 py-2 text-[13px] font-semibold bg-gradient-to-r from-purple-400 to-purple-600 text-white shadow-[0_0_28px_rgba(181,119,243,.35)] hover:shadow-[0_0_40px_rgba(181,119,243,.6)] disabled:opacity-40">
-        {!ready ? "Backend waking…" : running ? "Agent running…" : noRunsLeft ? "Hourly limit reached"
+        {!ready ? "Backend waking…" : running ? "Agent running…" : noRunsLeft ? `Hourly limit reached · try again in ~${wait(quota?.next_run_s ?? null)}`
           : h.blocked ? "Model out of free quota, pick another" : `Run in ${MODE_LABEL[mode]}`}
       </button>
 
