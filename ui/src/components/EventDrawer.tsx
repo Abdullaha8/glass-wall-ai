@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { MODE_LABEL, shortModel, type Mode, type TelemetryEvent } from "../lib/types";
+import { MODE_LABEL, plainDetail, shortModel, type Mode, type TelemetryEvent } from "../lib/types";
 import { StatusBadge } from "./Status";
 
 export function EventDrawer({ event, onClose, onReplay, replayMode }: {
@@ -44,7 +44,7 @@ export function EventDrawer({ event, onClose, onReplay, replayMode }: {
         <div className="flex items-start justify-between gap-2">
           <div>
             <StatusBadge color={event.color_tag} />
-            <p className="mt-1 text-[14px] font-medium">{event.detail}</p>
+            <p className="mt-1 text-[14px] font-medium">{plainDetail(event.detail)}</p>
             <p className="font-mono text-[12px] text-muted">{event.timestamp}</p>
           </div>
           <button onClick={onClose} className="rounded border border-line px-2 py-1 text-[12px]">Close</button>

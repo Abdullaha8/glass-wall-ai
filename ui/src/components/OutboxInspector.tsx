@@ -42,7 +42,7 @@ export function OutboxInspector({ messages, onReview, note }: {
                            label={m.pii_suspected ? "PII PATTERNS" : m.token_count ? "TOKENS ONLY" : "NO PII"} />
               <span className="font-mono">→ {m.recipient}</span>
               <span className="text-muted">{MODE_LABEL[m.mode] ?? m.mode} · {shortModel(m.model)}{m.case_id ? ` · ${m.case_id}` : ""}</span>
-              <span className="ml-auto text-muted">{m.token_count} tokens</span>
+              <span className="ml-auto text-muted">{m.token_count} masked value{m.token_count === 1 ? "" : "s"}</span>
             </div>
             <p className="mt-1 line-clamp-3 whitespace-pre-wrap break-words font-mono text-[12px]">{m.body}</p>
             {onReview && (

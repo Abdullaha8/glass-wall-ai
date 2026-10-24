@@ -125,3 +125,6 @@ export interface LiveRun {
 }
 
 export const shortModel = (id: string) => id.split("/").pop() ?? id;
+
+/** Telemetry details count tok_ placeholders as "tokens", which reads like LLM usage; say "masked values" instead. */
+export const plainDetail = (d: string) => d.replace(/(\d+) tokens/g, (_, n) => `${n} masked value${n === "1" ? "" : "s"}`);

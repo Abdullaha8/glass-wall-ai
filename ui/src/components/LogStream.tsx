@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
-import { shortModel, type Color, type TelemetryEvent } from "../lib/types";
+import { plainDetail, shortModel, type Color, type TelemetryEvent } from "../lib/types";
 import { STATUS } from "./Status";
 
 const COLORS: Color[] = ["red", "amber", "green", "blue"];
@@ -73,7 +73,7 @@ export function LogStream({ events, onSelect, selectedIndex, empty = "No events 
               <span className="hidden truncate sm:block">{e.mode}</span>
               <span className="hidden truncate text-muted sm:block">{shortModel(e.model)}</span>
               <span className="truncate text-muted sm:text-ink">{e.tool ?? e.event_type}</span>
-              <span className="col-span-3 line-clamp-2 break-words sm:col-span-1 sm:truncate">{e.detail}</span>
+              <span className="col-span-3 line-clamp-2 break-words sm:col-span-1 sm:truncate">{plainDetail(e.detail)}</span>
             </button>
           );
         })}
