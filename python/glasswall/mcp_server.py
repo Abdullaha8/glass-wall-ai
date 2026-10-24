@@ -61,8 +61,10 @@ def make_pool(role: str) -> ConnectionPool:
         if user != expected:
             raise RuntimeError(f"pool for {expected} connected as {user}; refusing to serve")
 
+    # check= tests each connection before handing it out: Neon's free tier suspends when idle,
+    # and the first query after that would otherwise fail on a dead connection
     return ConnectionPool(role_conninfo(role), min_size=1, max_size=4, open=False,
-                          kwargs={"autocommit": True}, configure=configure)
+                          kwargs={"autocommit": True}, configure=configure, check=ConnectionPool.check_connection)
 
 
 def _jsonable(value: Any) -> Any:

@@ -1,0 +1,13 @@
+# Keeps the free Render backend awake so visitors don't wait ~1 minute for it to start.
+# Pings /health only (no database work). Render's free tier allows one always-on service.
+name: keep-warm
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - run: curl -fsS --max-time 120 https://glass-wall-ai.onrender.com/health
