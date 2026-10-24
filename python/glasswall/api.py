@@ -5,7 +5,7 @@
 Routes
   POST /mcp/wall      MCP (streamable HTTP), tokenized view — the product endpoint
   POST /mcp/open      MCP baseline with raw view; only if DEMO_OPEN_ENABLED=1
-  GET  /health        liveness, used by the dashboard to wake a sleeping backend
+  GET  /health        liveness, used by the dashboard to wake a sleeping backend (and by the keep-awake ping)
   GET  /api/events    recent telemetry (polling fallback)
   GET  /api/models    models that passed the tool-calling check
   GET  /api/cases     eval cases the dashboard can launch
@@ -18,9 +18,11 @@ Routes
 import asyncio
 import contextlib
 import json
+import logging
 import os
 from typing import Literal
 
+import httpx
 from fastapi import FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from mcp.server.transport_security import TransportSecuritySettings
@@ -33,6 +35,21 @@ from .models import load_models
 from .telemetry import TelemetryBus
 
 OPEN_ENABLED = os.environ.get("DEMO_OPEN_ENABLED", "1") == "1"
+# Render's free tier sleeps after 15 idle minutes and takes ~1 minute to wake. On Render (which sets
+# RENDER_EXTERNAL_URL) the service pings its own public URL so visitors never meet a sleeping backend.
+KEEP_AWAKE_URL = os.environ.get("RENDER_EXTERNAL_URL")
+KEEP_AWAKE_EVERY_S = 600
+log = logging.getLogger("glasswall.api")
+
+
+async def _keep_awake() -> None:
+    async with httpx.AsyncClient(timeout=30) as client:
+        while True:
+            await asyncio.sleep(KEEP_AWAKE_EVERY_S)
+            try:
+                await client.get(f"{KEEP_AWAKE_URL.rstrip('/')}/health")
+            except httpx.HTTPError as e:   # never let a failed ping take the service down
+                log.warning("keep-awake ping failed: %s", e)
 
 
 def _transport_security() -> TransportSecuritySettings:
@@ -70,10 +87,13 @@ async def lifespan(_: FastAPI):
     for pool in [*pools.values(), writer_pool]:
         pool.open(wait=True, timeout=30)
     await asyncio.to_thread(bus.restore)
+    pinger = asyncio.create_task(_keep_awake()) if KEEP_AWAKE_URL else None
     async with contextlib.AsyncExitStack() as stack:
         for srv in servers.values():
             await stack.enter_async_context(srv.session_manager.run())
         yield
+    if pinger:
+        pinger.cancel()
     for pool in [*pools.values(), writer_pool]:
         pool.close()
 
