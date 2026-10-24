@@ -24,12 +24,14 @@ from typing import Literal
 
 import httpx
 from fastapi import FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect
+from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 from mcp.server.transport_security import TransportSecuritySettings
 from pydantic import BaseModel
 
 from .config import ROOT
 from .live import CASES, LiveError, LiveRunner
+from .mcp_page import page_for
 from .mcp_server import build_server, make_pool
 from .models import load_models
 from .telemetry import TelemetryBus
@@ -107,6 +109,18 @@ app.add_middleware(
 )
 for sub in mcp_apps.values():
     app.router.routes.extend(sub.routes)
+
+
+@app.middleware("http")
+async def mcp_page_for_browsers(request: Request, call_next):
+    """A person opening an MCP endpoint in a browser gets a short explainer page instead of a protocol error;
+    MCP clients (which ask for JSON or an event stream) are untouched."""
+    mount = request.url.path.rstrip("/").removeprefix("/mcp/")
+    accept = request.headers.get("accept", "")
+    if (request.method == "GET" and request.url.path.startswith("/mcp/") and mount in mcp_apps
+            and "text/html" in accept and "text/event-stream" not in accept):
+        return HTMLResponse(page_for(mount, KEEP_AWAKE_URL or str(request.base_url)))
+    return await call_next(request)
 
 
 @app.get("/health")
