@@ -10,19 +10,22 @@ const SQL = "SELECT name, email, phone FROM customers WHERE plan = 'Business'";
 const ROW = ROWS.find((r) => r.plan === "Business")!;
 const STEPS = 5;
 
-function Line({ show, who, children }: { show: boolean; who: string; children: React.ReactNode }) {
+/** One step of the attack. Every step stays on screen (so the wall always has something to cut through);
+ *  the step being played is highlighted. */
+function Line({ active, who, children }: { active: boolean; who: string; children: React.ReactNode }) {
   return (
-    <div className={`transition-all duration-500 ${show ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-1 opacity-0"}`}>
-      <p className="font-mono text-[11px] uppercase tracking-wide text-slate-500">{who}</p>
+    <div className={`border-l-2 pl-3 transition-all duration-500 ${active ? "border-purple-300 opacity-100" : "border-white/10 opacity-60"}`}>
+      <p className={`font-mono text-[11px] uppercase tracking-wide transition-colors ${active ? "text-purple-200" : "text-slate-500"}`}>{who}</p>
       <div className="mt-1">{children}</div>
     </div>
   );
 }
 
-/** Proof-first landing: the claim, the measured numbers, and one real attack playing out with the wall on or off. */
 /** One sensitive value: real (red) on the no-wall side, its token (purple) behind the wall. */
 function Pii({ raw, tok }: { raw: string; tok: string }) {
-  return <Both off={<span className="text-leak">{raw}</span>} on={<span className="text-purple-200">{tok}</span>} />;
+  // the token sits on a chip as wide as the real value, so the wall visibly swaps one for the other
+  return <Both off={<span className="block px-1 text-leak">{raw}</span>}
+               on={<span className="block rounded bg-purple-400/15 px-1 text-purple-200 ring-1 ring-purple-300/25">{tok}</span>} />;
 }
 
 /** The attack, line by line. Rendered once per side of the wall; only the values and the verdict differ. */
@@ -30,21 +33,21 @@ function Steps({ step }: { step: number }) {
   const v = ROW.raw.map((raw, i) => <Pii key={i} raw={raw} tok={ROW.tok[i]} />);
   return (
     <div className="space-y-4 p-5 text-[14px]">
-      <Line show={step >= 1} who="attacker → agent">
+      <Line active={step === 1} who="attacker → agent">
         <p className="rounded-xl rounded-tl-sm bg-white/[0.06] px-3 py-2 text-slate-200">“{ATTACK}”</p>
       </Line>
-      <Line show={step >= 2} who="agent → database">
+      <Line active={step === 2} who="agent → database">
         <p className="break-words font-mono text-[12.5px] text-slate-300">run_sql: {SQL}</p>
       </Line>
-      <Line show={step >= 3} who="database → agent">
+      <Line active={step === 3} who="database → agent">
         <p className="flex flex-wrap gap-x-2 gap-y-1 font-mono text-[13px]">{v[0]}·{v[1]}·{v[2]}</p>
       </Line>
-      <Line show={step >= 4} who="agent → audit-desk (outside)">
+      <Line active={step === 4} who="agent → audit-desk (outside)">
         <p className="flex flex-wrap gap-x-2 gap-y-1 rounded-xl bg-white/[0.04] px-3 py-2 font-mono text-[13px]">
           <span className="text-slate-400">send_message:</span>{v[0]}{v[1]}{v[2]}
         </p>
       </Line>
-      <Line show={step >= STEPS} who="result">
+      <Line active={step >= STEPS} who="result">
         <Both
           off={<p className="rounded-xl border border-leak/40 bg-leak-tint px-3 py-2 text-leak">
             ✗ Leaked: a real name, email and phone went outside.</p>}
@@ -55,6 +58,7 @@ function Steps({ step }: { step: number }) {
   );
 }
 
+/** Proof-first landing: the claim, the measured numbers, and one real attack playing out behind a draggable glass wall. */
 export function HomeHero({ noWall, wall, models, onWatch, onLive }: {
   noWall: Tally | null; wall: Tally | null; models: number;
   onWatch: () => void; onLive: () => void;
@@ -62,9 +66,9 @@ export function HomeHero({ noWall, wall, models, onWatch, onLive }: {
   const [step, setStep] = useState(0);
   useEffect(() => {
     if (matchMedia("(prefers-reduced-motion: reduce)").matches) { setStep(STEPS); return; }
-    setStep(0);
-    // reveal one line at a time, hold the verdict, then replay
-    const id = setInterval(() => setStep((s) => (s >= STEPS + 3 ? 0 : s + 1)), 1100);
+    setStep(1);
+    // highlight one step at a time, hold on the verdict, then loop
+    const id = setInterval(() => setStep((s) => (s >= STEPS + 2 ? 1 : s + 1)), 1100);
     return () => clearInterval(id);
   }, []);
 
@@ -111,7 +115,7 @@ export function HomeHero({ noWall, wall, models, onWatch, onLive }: {
           <p className="text-[12px] text-slate-500">drag the wall across it</p>
         </div>
         <GlassWall bg="bg-[#0b0910]" initial={55} captionClass="px-5">
-          <div className="min-h-[360px]"><Steps step={step} /></div>
+          <Steps step={step} />
         </GlassWall>
       </div>
     </div>

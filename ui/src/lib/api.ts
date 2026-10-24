@@ -1,4 +1,4 @@
-import type { CaseInfo, Latest, LiveRun, ModelInfo, Mode, OutboxMessage, TelemetryEvent } from "./types";
+import type { CaseInfo, Latest, LiveRun, ModelInfo, Mode, OutboxMessage, QuotaStatus, TelemetryEvent } from "./types";
 
 export const API_URL = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, "") ?? "http://127.0.0.1:8000";
 
@@ -29,6 +29,7 @@ export const health = (signal?: AbortSignal) =>
 export const getModels = () => fetch(`${API_URL}/api/models`).then((r) => json<ModelInfo[]>(r));
 export const getCases = () => fetch(`${API_URL}/api/cases`).then((r) => json<CaseInfo[]>(r));
 export const getOutbox = () => fetch(`${API_URL}/api/outbox?limit=50`).then((r) => json<OutboxMessage[]>(r));
+export const getQuota = () => fetch(`${API_URL}/api/quota`).then((r) => json<QuotaStatus>(r));
 export const getRun = (id: string) => fetch(`${API_URL}/api/runs/${id}`).then((r) => json<LiveRun>(r));
 
 export const startRun = (body: { mode: Mode; model: string; case_id?: string; prompt?: string }) =>

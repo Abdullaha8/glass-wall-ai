@@ -100,6 +100,12 @@ export interface OutboxMessage {
 }
 
 export interface ModelInfo { id: string; label: string }
+/** What a model's provider last told the backend: unknown (not used yet), ready, cooling (per-minute limit) or out (daily limit). */
+export interface ModelHealth { state: "unknown" | "ready" | "cooling" | "out"; wait_s: number | null; checked: number | null }
+export interface QuotaStatus {
+  runs_left: number; runs_per_hour: number; next_run_s: number | null; busy: boolean;
+  models: Record<string, ModelHealth>;
+}
 export interface CaseInfo { id: string; kind: "attack" | "normal"; title: string; family: string; prompt: string }
 
 export interface LiveRun {

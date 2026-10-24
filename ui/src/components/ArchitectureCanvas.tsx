@@ -85,7 +85,32 @@ export function ArchitectureCanvas({ mode, lastEvent }: { mode: Mode; lastEvent?
         <span className="font-medium">How the data flows · {MODE_LABEL[mode]}</span>
         <span>{walled ? "Glass wall ON" : "No wall: the agent can see real data"}</span>
       </figcaption>
-      <svg viewBox="0 0 804 196" className="h-auto w-full" role="img" aria-label={d.text}>
+      {/* phones: the same flow, top to bottom, big enough to read */}
+      <ol className="space-y-1.5 sm:hidden" aria-label={d.text}>
+        {([
+          ["agent", "AI agent", "an LLM such as Gemini"],
+          ["gate", "Gatekeeper", "our MCP server"],
+          ["wall"],
+          ["view", walled ? "Safe view" : "Open view", walled ? "tokens only" : "real data"],
+          ["db", "Customer database", "real names, emails, phones"],
+          ["outbox", "Outbox", "what an attacker would get"],
+        ] as [NodeId | "wall", string?, string?][]).map(([id, title, sub]) => id === "wall" ? (
+          <li key="wall" aria-hidden className="flex items-center gap-2 py-0.5">
+            <span className={`h-[5px] flex-1 rounded-full ${walled ? "bg-gradient-to-r from-purple-300/40 via-purple-200 to-purple-300/40 shadow-[0_0_12px_rgba(181,119,243,.8)]" : "border-t border-dashed border-white/25"}`} />
+            <span className={`text-[11px] ${walled ? "text-purple-200" : "text-slate-500"}`}>{walled ? "glass wall" : "no wall"}</span>
+            <span className={`h-[5px] flex-1 rounded-full ${walled ? "bg-gradient-to-r from-purple-300/40 via-purple-200 to-purple-300/40 shadow-[0_0_12px_rgba(181,119,243,.8)]" : "border-t border-dashed border-white/25"}`} />
+          </li>
+        ) : (
+          <li key={id} className={`flex items-baseline justify-between gap-3 rounded-lg border px-3 py-2 transition-colors duration-300 ${id === "outbox" ? "mt-3" : ""}`}
+              style={{ borderColor: on(id) ? d.color : "var(--border)", background: on(id) ? `color-mix(in srgb, ${d.color} 10%, transparent)` : undefined,
+                       opacity: d.active.length && !on(id) ? 0.55 : 1 }}>
+            <span className="text-[13px] font-semibold text-ink">{title}</span>
+            <span className={`text-right text-[11px] ${id === "view" ? (walled ? "text-ok" : "text-leak") : "text-muted"}`}>{sub}</span>
+          </li>
+        ))}
+      </ol>
+
+      <svg viewBox="0 0 804 150" className="hidden h-auto w-full sm:block" role="img" aria-label={d.text}>
         <defs>
           <marker id="gw-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto">
             <path d="M0 0L8 4L0 8z" fill="var(--text-muted)" />
@@ -121,8 +146,8 @@ export function ArchitectureCanvas({ mode, lastEvent }: { mode: Mode; lastEvent?
           </circle>
         )}
 
-        <text x={190} y={166} fontSize={13} fill="var(--text)" fontWeight={500}>{d.text}</text>
       </svg>
+      <p className="mt-2 text-[13px] font-medium leading-snug text-ink sm:pl-[23.6%]" aria-hidden>{d.text}</p>
     </figure>
   );
 }

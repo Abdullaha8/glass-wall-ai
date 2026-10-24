@@ -28,6 +28,11 @@ CASES |= {c["id"]: {"id": c["id"], "kind": "normal", "title": c["question"], "fa
           for c in SUITE["normals"]}
 
 
+def _seconds_to_pacific_midnight(now: float) -> float:
+    """Gemini's free daily quota resets at midnight Pacific time (UTC-7 in summer, UTC-8 in winter; -7 is close enough)."""
+    return 86400 - ((now - 7 * 3600) % 86400)
+
+
 class LiveError(Exception):
     def __init__(self, status: int, message: str):
         super().__init__(message)
@@ -55,6 +60,36 @@ class LiveRunner:
         self._active: str | None = None   # set synchronously in start(), so double clicks can't race
         self._per_ip: dict[str, deque] = defaultdict(deque)
         self._day: deque = deque()
+        # what each provider last told us: ready, cooling down (per-minute limit) or out of free quota (daily limit)
+        self.model_health: dict[str, dict] = {m: {"state": "unknown", "until": None, "checked": None} for m in allowed_models}
+
+    def _note_model(self, model: str, rate_limit: dict | None, error: str | None) -> None:
+        now = time.time()
+        if rate_limit:
+            wait = rate_limit["retry_s"]
+            if wait is None:
+                wait = _seconds_to_pacific_midnight(now) if rate_limit["daily"] else 60
+            state = "out" if rate_limit["daily"] or wait > 600 else "cooling"
+            self.model_health[model] = {"state": state, "until": now + wait, "checked": now}
+        elif not error:
+            self.model_health[model] = {"state": "ready", "until": None, "checked": now}
+
+    def status(self, ip: str) -> dict:
+        """Live-run budget for this visitor, and each model's free-tier state."""
+        now = time.time()
+        q = self._per_ip[ip]
+        while q and now - q[0] > 3600:
+            q.popleft()
+        models = {}
+        for m, h in self.model_health.items():
+            h = dict(h)
+            if h["until"] and h["until"] <= now:   # the wait is over
+                h = {"state": "ready", "until": None, "checked": h["checked"]}
+            h["wait_s"] = round(h["until"] - now) if h["until"] else None
+            models[m] = h
+        return {"runs_left": max(0, PER_IP_PER_HOUR - len(q)), "runs_per_hour": PER_IP_PER_HOUR,
+                "next_run_s": round(3600 - (now - q[0])) if len(q) >= PER_IP_PER_HOUR else None,
+                "busy": self._active is not None, "models": models}
 
     def _check_quota(self, ip: str) -> None:
         now = time.time()
@@ -75,6 +110,10 @@ class LiveRunner:
             raise LiveError(400, f"mode must be one of {', '.join(MODES)}")
         if model not in self.allowed_models:
             raise LiveError(400, "unknown or unavailable model")
+        h = self.model_health.get(model, {})
+        if h.get("until") and h["until"] > time.time():
+            mins = max(1, round((h["until"] - time.time()) / 60))
+            raise LiveError(429, f"{model} is out of free quota for now (about {mins} min); pick another model")
         if case_id:
             if case_id not in CASES:
                 raise LiveError(400, "unknown case")
@@ -99,6 +138,7 @@ class LiveRunner:
             result = await run_agent(self.backend, prompt, mode=mode, model=model, run_id=run_id)
         finally:
             self._active = None
+        self._note_model(model, result.rate_limit, result.error)
         summary = asdict(result)
         summary["tool_calls"] = [{"name": c["name"], "arguments": c["arguments"]} for c in summary["tool_calls"]]
         self.runs[run_id] |= {"status": "error" if result.error else "done", **summary}

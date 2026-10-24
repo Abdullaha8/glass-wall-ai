@@ -10,6 +10,7 @@ Routes
   GET  /api/models    models that passed the tool-calling check
   GET  /api/cases     eval cases the dashboard can launch
   POST /api/run       start a live run (rate-limited; one at a time)
+  GET  /api/quota     this visitor's live runs left, and each model's free-tier state
   GET  /api/runs/{id} live run summary
   GET  /api/outbox    recent outbox messages; POST /api/outbox/{id}/review marks them
   WS   /ws/telemetry  backlog, then live events
@@ -130,13 +131,21 @@ class RunRequest(BaseModel):
     prompt: str | None = None
 
 
+def _client_ip(request: Request) -> str:
+    return request.headers.get("x-forwarded-for", request.client.host if request.client else "?").split(",")[0].strip()
+
+
 @app.post("/api/run")
 async def start_run(req: RunRequest, request: Request) -> dict:
-    ip = request.headers.get("x-forwarded-for", request.client.host if request.client else "?").split(",")[0].strip()
     try:
-        return live.start(ip, req.mode, req.model, req.case_id, req.prompt)
+        return live.start(_client_ip(request), req.mode, req.model, req.case_id, req.prompt)
     except LiveError as e:
         raise HTTPException(e.status, str(e)) from None
+
+
+@app.get("/api/quota")
+async def quota(request: Request) -> dict:
+    return live.status(_client_ip(request))
 
 
 @app.get("/api/runs/{run_id}")

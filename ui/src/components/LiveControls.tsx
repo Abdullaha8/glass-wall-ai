@@ -1,8 +1,21 @@
 import { useState } from "react";
-import { MODE_LABEL, type CaseInfo, type LiveRun, type ModelInfo, type Mode, type TelemetryEvent } from "../lib/types";
+import { MODE_LABEL, type CaseInfo, type LiveRun, type ModelHealth, type ModelInfo, type Mode, type QuotaStatus, type TelemetryEvent } from "../lib/types";
 import { StatusBadge } from "./Status";
 
-export function LiveControls({ mode, models, cases, model, onModel, run, runEvents, onRun, error, ready }: {
+const wait = (s: number | null) =>
+  s == null ? "" : s < 90 ? `${s} s` : s < 5400 ? `${Math.round(s / 60)} min` : `${Math.round(s / 3600)} h`;
+
+/** One line per model state, in plain words. */
+function health(h: ModelHealth | undefined): { dot: string; text: string; blocked: boolean } {
+  switch (h?.state) {
+    case "ready": return { dot: "bg-ok", text: "free quota available", blocked: false };
+    case "cooling": return { dot: "bg-warn", text: `busy, free per-minute limit hit · back in ~${wait(h.wait_s)}`, blocked: true };
+    case "out": return { dot: "bg-leak", text: `free quota used up · back in ~${wait(h.wait_s)}`, blocked: true };
+    default: return { dot: "bg-slate-500", text: "free tier · not used yet this session", blocked: false };
+  }
+}
+
+export function LiveControls({ mode, models, cases, model, onModel, run, runEvents, onRun, error, ready, quota }: {
   mode: Mode;
   models: ModelInfo[];
   cases: CaseInfo[];
@@ -13,12 +26,15 @@ export function LiveControls({ mode, models, cases, model, onModel, run, runEven
   onRun: (req: { case_id?: string; prompt?: string }) => void;
   error: string | null;
   ready: boolean;
+  quota: QuotaStatus | null;
 }) {
   const [caseId, setCaseId] = useState("A07");
   const [custom, setCustom] = useState("");
   const running = run?.status === "running";
   const leaked = runEvents.some((e) => e.color_tag === "red");
   const held = runEvents.some((e) => e.color_tag === "amber");
+  const h = health(quota?.models[model]);
+  const noRunsLeft = quota != null && quota.runs_left === 0;
 
   return (
     <section className="space-y-3 rounded-xl border border-line bg-surface p-3" aria-label="Live run">
@@ -28,9 +44,15 @@ export function LiveControls({ mode, models, cases, model, onModel, run, runEven
         Model
         <select value={model} onChange={(e) => onModel(e.target.value)} disabled={running}
                 className="mt-1 block w-full rounded-xl border border-line bg-surface-2 px-2 py-1.5 text-[13px] text-ink">
-          {models.map((m) => <option key={m.id} value={m.id}>{m.label}</option>)}
+          {models.map((m) => {
+            const mh = health(quota?.models[m.id]);
+            return <option key={m.id} value={m.id}>{m.label}{mh.blocked ? " · unavailable for now" : ""}</option>;
+          })}
         </select>
       </label>
+      <p className="flex items-center gap-2 text-[12px] text-slate-300" aria-live="polite">
+        <span className={`h-2 w-2 shrink-0 rounded-full ${h.dot}`} aria-hidden />{h.text}
+      </p>
 
       <label className="block text-[12px] text-muted">
         Prompt from the eval suite
@@ -54,10 +76,17 @@ export function LiveControls({ mode, models, cases, model, onModel, run, runEven
                   className="mt-1 block w-full rounded-xl border border-line bg-surface-2 px-2 py-1.5 text-[13px] text-ink" />
       </label>
 
-      <button disabled={!ready || running || !model}
+      {quota && (
+        <p className="text-[12px] text-muted">
+          Your live runs: <strong className="text-ink">{quota.runs_left} of {quota.runs_per_hour}</strong> left this hour
+          {noRunsLeft && quota.next_run_s != null && <> · next one in ~{wait(quota.next_run_s)}</>}
+        </p>
+      )}
+      <button disabled={!ready || running || !model || h.blocked || noRunsLeft}
               onClick={() => onRun(custom.trim() ? { prompt: custom.trim() } : { case_id: caseId })}
               className="w-full rounded px-3 py-2 text-[13px] font-semibold bg-gradient-to-r from-purple-400 to-purple-600 text-white shadow-[0_0_28px_rgba(181,119,243,.35)] hover:shadow-[0_0_40px_rgba(181,119,243,.6)] disabled:opacity-40">
-        {!ready ? "Backend waking…" : running ? "Agent running…" : `Run in ${MODE_LABEL[mode]}`}
+        {!ready ? "Backend waking…" : running ? "Agent running…" : noRunsLeft ? "Hourly limit reached"
+          : h.blocked ? "Model out of free quota, pick another" : `Run in ${MODE_LABEL[mode]}`}
       </button>
 
       {error && <p className="rounded bg-warn-tint px-2 py-1.5 text-[12px] text-warn" role="alert">▲ {error}</p>}

@@ -8,10 +8,11 @@ function time(ts: string) {
   return ts.slice(11, 23);
 }
 
-export function LogStream({ events, onSelect, selectedIndex }: {
+export function LogStream({ events, onSelect, selectedIndex, empty = "No events yet." }: {
   events: TelemetryEvent[];
   onSelect: (i: number) => void;
   selectedIndex: number | null;
+  empty?: string;
 }) {
   const [hidden, setHidden] = useState<Set<Color>>(new Set());
   const [paused, setPaused] = useState(false);
@@ -60,19 +61,19 @@ export function LogStream({ events, onSelect, selectedIndex }: {
       </div>
       <div ref={box} role="log" aria-live="polite" tabIndex={0} onKeyDown={onKey}
            className="h-[300px] overflow-y-auto font-mono text-[12px] focus-visible:outline-offset-[-2px]">
-        {rows.length === 0 && <p className="px-3 py-6 text-center font-sans text-[13px] text-muted">No events yet.</p>}
+        {rows.length === 0 && <p className="px-3 py-6 text-center font-sans text-[13px] text-muted">{empty}</p>}
         {rows.map(({ e, i }) => {
           const s = STATUS[e.color_tag];
           const selected = i === selectedIndex;
           return (
             <button key={i} onClick={() => onSelect(i)} aria-current={selected}
-                    className={`grid w-full grid-cols-[88px_62px_minmax(0,1fr)] items-baseline gap-x-2 border-b border-line/60 px-3 py-1 text-left sm:grid-cols-[88px_62px_118px_110px_96px_minmax(0,1fr)] ${selected ? "bg-surface-2" : e.color_tag === "red" ? s.tint : "hover:bg-surface-2"}`}>
+                    className={`grid w-full grid-cols-[88px_62px_minmax(0,1fr)] items-baseline gap-x-2 gap-y-0.5 border-b border-line/60 px-3 py-1.5 text-left sm:py-1 sm:grid-cols-[88px_62px_118px_110px_96px_minmax(0,1fr)] ${selected ? "bg-surface-2" : e.color_tag === "red" ? s.tint : "hover:bg-surface-2"}`}>
               <span className="text-muted">{time(e.timestamp)}</span>
               <span className={s.text}><span aria-hidden>{s.glyph}</span> {s.label}</span>
               <span className="hidden truncate sm:block">{e.mode}</span>
               <span className="hidden truncate text-muted sm:block">{shortModel(e.model)}</span>
-              <span className="hidden truncate sm:block">{e.tool ?? e.event_type}</span>
-              <span className="truncate">{e.detail}</span>
+              <span className="truncate text-muted sm:text-ink">{e.tool ?? e.event_type}</span>
+              <span className="col-span-3 line-clamp-2 break-words sm:col-span-1 sm:truncate">{e.detail}</span>
             </button>
           );
         })}

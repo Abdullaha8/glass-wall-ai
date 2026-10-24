@@ -30,7 +30,7 @@ export function OutcomeDonut({ outcomes, walled }: { outcomes: Outcomes; walled:
   });
 
   return (
-    <div className="grid grid-cols-[minmax(0,1fr)_170px] items-center gap-4">
+    <div className="grid grid-cols-1 items-center gap-4 min-[420px]:grid-cols-[minmax(0,1fr)_170px]">
       <ul className="space-y-2">
         {items.map((i, idx) => (
           <li key={i.key}>
@@ -47,7 +47,7 @@ export function OutcomeDonut({ outcomes, walled }: { outcomes: Outcomes; walled:
           </li>
         ))}
       </ul>
-      <svg viewBox="0 0 180 180" className="h-auto w-full" role="img" aria-label={items.map((i) => `${i.value} ${i.label}`).join(", ")}>
+      <svg viewBox="0 0 180 180" className="mx-auto h-auto w-full max-w-[200px] min-[420px]:max-w-none" role="img" aria-label={items.map((i) => `${i.value} ${i.label}`).join(", ")}>
         <defs>
           <linearGradient id="donut-purple" x1="0" y1="0" x2="1" y2="1">
             <stop offset="0" stopColor="#dcc2fb" /><stop offset="1" stopColor="#9d55e6" />

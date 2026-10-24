@@ -12,6 +12,7 @@ import asyncio
 import contextlib
 import json
 import logging
+import re
 import time
 import uuid
 from dataclasses import asdict, dataclass, field
@@ -58,6 +59,19 @@ class RunResult:
     hit_step_limit: bool = False
     tokens_in: int = 0
     tokens_out: int = 0
+    rate_limit: dict | None = None   # set when the provider refused for quota reasons (see rate_limit_info)
+
+
+def rate_limit_info(text: str) -> dict | None:
+    """Classify a provider error as a free-tier limit: per-minute (short wait) or daily (wait for the reset).
+    Reads the full message, since the stored error is truncated."""
+    low = text.lower()
+    if not ("ratelimit" in low or "429" in low or "quota" in low or "resource_exhausted" in low):
+        return None
+    daily = bool(re.search(r"per ?day|perday|daily|tokens per day|\(tpd\)|\(rpd\)", low))
+    m = re.search(r"(?:retry in|try again in)\s*(?:(\d+)h)?\s*(?:(\d+)m)?\s*([\d.]+)s", low)
+    retry_s = (int(m[1] or 0) * 3600 + int(m[2] or 0) * 60 + float(m[3])) if m else None
+    return {"daily": daily, "retry_s": retry_s}
 
 
 class LocalBackend:
@@ -162,6 +176,7 @@ async def run_agent(backend: LocalBackend, prompt: str, *, mode: str, model: str
         while isinstance(e, BaseExceptionGroup) and e.exceptions:  # MCP client wraps errors in task groups
             e = e.exceptions[0]
         result.error = f"{type(e).__name__}: {str(e)[:300]}"
+        result.rate_limit = rate_limit_info(f"{type(e).__name__}: {e}")
 
     result.latency_ms = int((time.perf_counter() - t0) * 1000)
     severity = "warn" if result.error else "info"

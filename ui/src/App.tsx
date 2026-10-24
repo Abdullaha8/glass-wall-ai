@@ -26,7 +26,7 @@ import { KeyResults } from "./components/landing/KeyResults";
 import * as api from "./lib/api";
 import {
   shortModel,
-  type CaseInfo, type Latest, type LiveRun, type ModelInfo, type Mode, type OutboxMessage, type TelemetryEvent,
+  type CaseInfo, type Latest, type LiveRun, type ModelInfo, type Mode, type OutboxMessage, type QuotaStatus, type TelemetryEvent,
 } from "./lib/types";
 
 const MAIN_MODEL = "groq/openai/gpt-oss-120b";
@@ -54,6 +54,7 @@ export default function App() {
   const [run, setRun] = useState<LiveRun | null>(null);
   const [runError, setRunError] = useState<string | null>(null);
   const [outbox, setOutbox] = useState<OutboxMessage[]>([]);
+  const [quota, setQuota] = useState<QuotaStatus | null>(null);
 
   const [selected, setSelected] = useState<number | null>(null);
 
@@ -101,6 +102,15 @@ export default function App() {
   const refreshOutbox = useCallback(() => { api.getOutbox().then(setOutbox).catch(() => {}); }, []);
   useEffect(() => { if (view === "live" && backend === "up") refreshOutbox(); }, [view, backend, refreshOutbox]);
 
+  // Live: this visitor's runs left and each model's free-tier state, refreshed while the live view is open.
+  const refreshQuota = useCallback(() => { api.getQuota().then(setQuota).catch(() => {}); }, []);
+  useEffect(() => {
+    if (!(tab === "demo" && view === "live" && backend === "up")) return;
+    refreshQuota();
+    const id = setInterval(refreshQuota, 20_000);
+    return () => clearInterval(id);
+  }, [tab, view, backend, refreshQuota]);
+
   // Replay: play the recorded events for the selected mode + model, one by one.
   const replayForMode = useMemo(
     () => replayEvents.filter((e) => e.mode === mode && e.model === replayModel),
@@ -141,25 +151,29 @@ export default function App() {
     if (!run || run.status !== "running") return;
     pollRef.current = window.setInterval(async () => {
       const r = await api.getRun(run.run_id).catch(() => null);
-      if (r && r.status !== "running") { setRun(r); refreshOutbox(); }
+      if (r && r.status !== "running") { setRun(r); refreshOutbox(); refreshQuota(); }
     }, 1500);
     return () => clearInterval(pollRef.current);
-  }, [run, refreshOutbox]);
+  }, [run, refreshOutbox, refreshQuota]);
 
   const startRun = async (req: { case_id?: string; prompt?: string }) => {
     setRunError(null);
+    // a fresh run starts with a clean log: only this run's telemetry is shown
+    setLiveEvents([]);
+    setSelected(null);
     try {
       setRun(await api.startRun({ mode, model: liveModel, ...req }));
     } catch (e) {
       setRunError((e as Error).message);
     }
+    refreshQuota();
   };
 
   const replayQuery = (query: string) =>
     startRun({ prompt: `Run exactly this SQL with run_sql and show me the raw result: ${query}` });
 
-  const events = view === "replay" ? replayForMode.slice(0, Math.min(played, replayForMode.length)) : liveEvents;
   const runEvents = run ? liveEvents.filter((e) => e.run_id === run.run_id) : [];
+  const events = view === "replay" ? replayForMode.slice(0, Math.min(played, replayForMode.length)) : runEvents;
   const lastEvent = view === "replay" ? events[events.length - 1] : runEvents[runEvents.length - 1];
   const summary = latest?.summary[replayModel];
   const replayOutboxShown = replayOutbox.filter((m) => m.model === replayModel && m.mode === mode);
@@ -311,12 +325,13 @@ export default function App() {
             <div className="mt-5 grid grid-cols-[minmax(0,1fr)] gap-5 lg:grid-cols-[minmax(0,1fr)_360px]">
               <div className="min-w-0 space-y-5">
                 <ArchitectureCanvas mode={mode} lastEvent={lastEvent} />
-                <LogStream events={events} selectedIndex={selected} onSelect={setSelected} />
+                <LogStream events={events} selectedIndex={selected} onSelect={setSelected}
+                           empty={view === "live" ? "Pick a prompt and press Run. Only your run's telemetry shows here." : "No events yet."} />
               </div>
-              <aside className="space-y-4">
+              <aside className={`space-y-4 ${view === "live" ? "order-first lg:order-none" : ""}`}>
                 {view === "live" ? (
                   <LiveControls mode={mode} models={models} cases={cases} model={liveModel} onModel={setLiveModel}
-                                run={run} runEvents={runEvents} onRun={startRun} error={runError} ready={backend === "up"} />
+                                run={run} runEvents={runEvents} onRun={startRun} error={runError} ready={backend === "up"} quota={quota} />
                 ) : (
                   <div className="rounded-xl bg-white/[0.04] p-4 text-[13px] leading-relaxed text-slate-400 ring-1 ring-white/[0.06]">
                     <p className="font-medium text-white">Reading the replay</p>

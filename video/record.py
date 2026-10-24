@@ -26,12 +26,6 @@ CAPTIONS = {s["id"]: s["caption"] for s in NARRATION["scenes"]}
 DUR = json.loads((BUILD / "audio" / "durations.json").read_text(encoding="utf-8"))
 
 OVERLAY_JS = r"""
-// recording only: hide the floating "Run live" pill, which would sit on top of the content on camera
-document.addEventListener('DOMContentLoaded', () => {
-  const st = document.createElement('style');
-  st.textContent = 'button.fixed.bottom-6 { display: none !important; }';
-  document.head.appendChild(st);
-});
 window.__gw = {
   caption(text) {
     let el = document.getElementById('gw-cap');
@@ -125,7 +119,7 @@ def main() -> None:
 
         nav = lambda name: page.locator("nav[aria-label=Sections]").get_by_role("button", name=name, exact=True)
 
-        # 1 · intro card, then reveal the Overview dashboard
+        # 1 · intro card, then reveal the Home page (claim, numbers, one attack behind the glass wall)
         page.goto(SITE, wait_until="networkidle")
         page.evaluate("() => window.__gw.card('Glass Wall AI', ['AI agents see your data’s shape. Never your users.', 'MCP · Postgres · LiteLLM · real agents, real attacks'])")
         t = scene(page, "s1_intro")
@@ -136,10 +130,10 @@ def main() -> None:
 
         # 2 · No-Wall: social-engineering attack, real data leaves
         t = scene(page, "s2_no_wall")
-        nav("Run live").click()
+        page.get_by_role("button", name="Run live").click()
         page.get_by_text("live backend ready").wait_for(timeout=90_000)
         page.get_by_label("Model").select_option(MODEL)
-        page.get_by_role("radio", name="No-Wall").click()
+        page.get_by_role("radio", name="No wall").click()
         run_live(page, "A07")
         page.locator('section[aria-label="Outbox inspector"]').scroll_into_view_if_needed()
         page.wait_for_timeout(5000)
@@ -158,9 +152,9 @@ def main() -> None:
         page.wait_for_timeout(3000)
         hold_until(t, "s3_glass_wall")
 
-        # 4 · The measurement: Overview heatmap, then the Results tiles and table
+        # 4 · The measurement: Dashboard heatmap, then the Results tiles and table
         t = scene(page, "s4_scoreboard")
-        nav("Overview").click()
+        nav("Dashboard").click()
         page.get_by_text("Every attack, every setup").scroll_into_view_if_needed()
         page.wait_for_timeout(int(DUR["s4_scoreboard"] * 450))
         nav("Results").click()

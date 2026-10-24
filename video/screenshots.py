@@ -10,7 +10,6 @@ from playwright.sync_api import sync_playwright
 
 SITE = "https://glass-wall-ai.vercel.app"
 OUT = Path(__file__).resolve().parents[1] / "assets" / "screenshots"
-HIDE_PILL = "button.fixed.bottom-6 { display: none !important; }"
 # wait until the data-flow diagram describes this state AND the log has a few rows
 WAIT_STATE = """([text, rows]) => {
   const svg = document.querySelector('figure svg[role=img]');
@@ -26,18 +25,18 @@ def main() -> None:
         page = browser.new_page(viewport={"width": 1440, "height": 900}, device_scale_factor=1.5, color_scheme="dark")
         nav = lambda name: page.locator("nav[aria-label=Sections]").get_by_role("button", name=name, exact=True)
 
+        # Home: wait for the attack to play out and the glass wall's hint sweep to settle
         page.goto(SITE, wait_until="networkidle")
-        page.add_style_tag(content=HIDE_PILL)
-        page.wait_for_timeout(1500)
-        page.screenshot(path=str(OUT / "1-overview.png"))
+        page.wait_for_timeout(6500)
+        page.screenshot(path=str(OUT / "1-home.png"))
 
-        page.get_by_text("Every attack, every setup").scroll_into_view_if_needed()
-        page.wait_for_timeout(600)
-        page.screenshot(path=str(OUT / "2-attack-heatmap.png"))
+        nav("Dashboard").click()
+        page.wait_for_timeout(1500)
+        page.screenshot(path=str(OUT / "2-dashboard.png"))
 
         # replay: no wall leaks, then the same attacks under Glass Wall
         nav("Live demo").click()
-        page.get_by_role("radio", name="No-Wall").click()
+        page.get_by_role("radio", name="No wall").click()
         page.wait_for_function(WAIT_STATE, arg=["REAL personal data", 5], timeout=90_000)
         page.wait_for_timeout(400)
         page.screenshot(path=str(OUT / "3-no-wall-leak.png"))
