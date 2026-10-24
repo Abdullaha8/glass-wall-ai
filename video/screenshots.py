@@ -53,7 +53,7 @@ def main() -> None:
 
         nav("How it works").click()
         page.wait_for_timeout(800)
-        page.screenshot(path=str(OUT / "6-what-the-agent-sees.png"))
+        page.screenshot(path=str(OUT / "6-how-it-works.png"))
         browser.close()
     print("wrote", ", ".join(sorted(f.name for f in OUT.glob("*.png"))))
 

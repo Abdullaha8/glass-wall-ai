@@ -368,9 +368,6 @@ export default function App() {
 
         {tab === "how" && (
           <div className="space-y-4">
-            <Card title="What the agent sees" right={<Pill>raise the wall above ↑</Pill>}>
-              <BeforeAfter walled={walled} />
-            </Card>
             <Card title="A wall in the database, not a promise from the model">
               <HowItWorks />
               <div className="mx-auto mt-5 max-w-[920px]"><ArchitectureCanvas mode={walled ? "glass_wall" : "no_wall"} lastEvent={undefined} /></div>
