@@ -8,13 +8,15 @@ type Values = Record<string, Partial<Record<Mode, number | null>>>;
  * Marks: 4px rounded data-ends on the baseline, 2px gaps, value labels on every
  * bar, hover tooltip, legend above. Glass Wall bars get the site's purple gradient and glow.
  */
-export function GroupedBars({ title, subtitle, values, models, label = shortModel }: {
+export function GroupedBars({ title, subtitle, values, models, label = shortModel, colors = {} }: {
   title: string;
   subtitle: string;
   values: Values;
   models: string[];
   label?: (model: string) => string;
+  colors?: Partial<Record<Mode, string>>;   // per-chart override, e.g. leaks in the site's red
 }) {
+  const color = (m: Mode) => colors[m] ?? MODE_VAR[m];
   const [hover, setHover] = useState<{ model: string; mode: Mode; x: number; y: number } | null>(null);
   const W = 520, H = 210, left = 36, right = 8, top = 22, bottom = 30;
   const plotW = W - left - right, plotH = H - top - bottom;
@@ -37,7 +39,7 @@ export function GroupedBars({ title, subtitle, values, models, label = shortMode
         <ul className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[12px]" aria-label="Legend">
           {MODES.map((m) => (
             <li key={m} className="flex items-center gap-1.5">
-              <span className="inline-block h-2.5 w-2.5 rounded-sm" style={{ background: MODE_VAR[m] }} aria-hidden />
+              <span className="inline-block h-2.5 w-2.5 rounded-sm" style={{ background: color(m) }} aria-hidden />
               {MODE_LABEL[m]}
             </li>
           ))}
@@ -83,9 +85,9 @@ export function GroupedBars({ title, subtitle, values, models, label = shortMode
                      onMouseLeave={() => setHover(null)}>
                     {/* hit target taller than the mark */}
                     <rect x={x - 1} y={top} width={barW + 2} height={plotH} fill="transparent" />
-                    <path d={bar(x, v)} fill={m === "glass_wall" ? "url(#gb-wall)" : MODE_VAR[m]}
+                    <path d={bar(x, v)} fill={m === "glass_wall" ? "url(#gb-wall)" : color(m)}
                           filter={m === "glass_wall" ? "url(#gb-glow)" : undefined} opacity={hover && (hover.model !== md || hover.mode !== m) ? 0.45 : 1} />
-                    {v === 0 && <rect x={x} y={top + plotH - 3} width={barW} height={3} rx={1.5} fill={MODE_VAR[m]}
+                    {v === 0 && <rect x={x} y={top + plotH - 3} width={barW} height={3} rx={1.5} fill={color(m)}
                                        filter={m === "glass_wall" ? "url(#gb-glow)" : undefined} />}
                     <text x={x + barW / 2} y={y(v) - 5} textAnchor="middle" fontSize={12} fontWeight={700} fill="var(--text)">
                       {Math.round(v)}

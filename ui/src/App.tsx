@@ -144,6 +144,8 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
   const openTab = (t: Tab) => { setTab(t); window.scrollTo({ top: 0 }); };
+  // the Live demo tab opens straight into live mode; "Watch recorded attacks" buttons choose the replay explicitly
+  const onTopTab = (t: Tab) => { if (t === "demo") { setView("live"); setSelected(null); } openTab(t); };
 
   // Live: poll the active run until it finishes.
   const pollRef = useRef<number | undefined>(undefined);
@@ -213,7 +215,7 @@ export default function App() {
       {/* the soft purple floor glow from the reference */}
       <div aria-hidden className="pointer-events-none fixed inset-x-0 bottom-0 h-[45vh] bg-gradient-to-t from-purple-900/40 via-purple-900/10 to-transparent" />
 
-      <TopBar tab={tab} onTab={openTab} onRunLive={goLive} />
+      <TopBar tab={tab} onTab={onTopTab} onRunLive={goLive} />
 
       <main className="relative mx-auto max-w-[1360px] px-4 sm:px-6">
         {tab !== "home" && <div className="flex flex-wrap items-end justify-between gap-4 pb-6 pt-6 sm:pt-8">

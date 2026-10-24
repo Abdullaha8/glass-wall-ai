@@ -36,6 +36,7 @@ def main() -> None:
 
         # replay: no wall leaks, then the same attacks under Glass Wall
         nav("Live demo").click()
+        page.get_by_role("tab", name="Replay recorded runs").click()   # the tab opens in live mode
         page.get_by_role("radio", name="No wall").click()
         page.wait_for_function(WAIT_STATE, arg=["REAL personal data", 5], timeout=90_000)
         page.wait_for_timeout(400)

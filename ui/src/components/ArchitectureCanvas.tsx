@@ -110,7 +110,7 @@ export function ArchitectureCanvas({ mode, lastEvent }: { mode: Mode; lastEvent?
         ))}
       </ol>
 
-      <svg viewBox="0 0 804 150" className="hidden h-auto w-full sm:block" role="img" aria-label={d.text}>
+      <svg viewBox="0 0 804 194" className="hidden h-auto w-full sm:block" role="img" aria-label={d.text}>
         <defs>
           <marker id="gw-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto">
             <path d="M0 0L8 4L0 8z" fill="var(--text-muted)" />

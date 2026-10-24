@@ -40,6 +40,25 @@ export function LiveControls({ mode, models, cases, model, onModel, run, runEven
     <section className="space-y-3 rounded-xl border border-line bg-surface p-3" aria-label="Live run">
       <h2 className="text-[13px] font-semibold">Run an agent · {MODE_LABEL[mode]}</h2>
 
+      <div className="grid grid-cols-2 gap-2 rounded-xl border border-purple-400/25 bg-purple-900/15 p-2.5" aria-live="polite" aria-label="Free-tier limits">
+        <div>
+          <p className="text-[11px] uppercase tracking-wide text-slate-400">Your live runs</p>
+          <p className="mt-0.5 text-[20px] font-light leading-none text-white">
+            {quota ? <>{quota.runs_left}<span className="text-[13px] text-slate-400"> of {quota.runs_per_hour} left</span></> : <span className="text-[13px] text-slate-400">checking…</span>}
+          </p>
+          <p className="mt-1 text-[11px] text-slate-400">
+            {noRunsLeft && quota?.next_run_s != null ? `next one in ~${wait(quota.next_run_s)}` : "per hour, per visitor"}
+          </p>
+        </div>
+        <div>
+          <p className="text-[11px] uppercase tracking-wide text-slate-400">Model's free quota</p>
+          <p className="mt-1 flex items-start gap-1.5 text-[12px] leading-snug text-slate-200">
+            <span className={`mt-1 h-2 w-2 shrink-0 rounded-full ${quota ? h.dot : "animate-pulse bg-slate-500"}`} aria-hidden />
+            {quota ? h.text : "checking…"}
+          </p>
+        </div>
+      </div>
+
       <label className="block text-[12px] text-muted">
         Model
         <select value={model} onChange={(e) => onModel(e.target.value)} disabled={running}
@@ -50,9 +69,7 @@ export function LiveControls({ mode, models, cases, model, onModel, run, runEven
           })}
         </select>
       </label>
-      <p className="flex items-center gap-2 text-[12px] text-slate-300" aria-live="polite">
-        <span className={`h-2 w-2 shrink-0 rounded-full ${h.dot}`} aria-hidden />{h.text}
-      </p>
+
 
       <label className="block text-[12px] text-muted">
         Prompt from the eval suite
@@ -76,12 +93,6 @@ export function LiveControls({ mode, models, cases, model, onModel, run, runEven
                   className="mt-1 block w-full rounded-xl border border-line bg-surface-2 px-2 py-1.5 text-[13px] text-ink" />
       </label>
 
-      {quota && (
-        <p className="text-[12px] text-muted">
-          Your live runs: <strong className="text-ink">{quota.runs_left} of {quota.runs_per_hour}</strong> left this hour
-          {noRunsLeft && quota.next_run_s != null && <> · next one in ~{wait(quota.next_run_s)}</>}
-        </p>
-      )}
       <button disabled={!ready || running || !model || h.blocked || noRunsLeft}
               onClick={() => onRun(custom.trim() ? { prompt: custom.trim() } : { case_id: caseId })}
               className="w-full rounded px-3 py-2 text-[13px] font-semibold bg-gradient-to-r from-purple-400 to-purple-600 text-white shadow-[0_0_28px_rgba(181,119,243,.35)] hover:shadow-[0_0_40px_rgba(181,119,243,.6)] disabled:opacity-40">
