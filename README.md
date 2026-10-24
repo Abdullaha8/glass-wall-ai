@@ -8,7 +8,8 @@ Glass Wall is a zero-trust boundary between AI agents and a database of personal
 
 | | |
 |---|---|
-| Live dashboard | https://glass-wall-ai.vercel.app (replay works instantly; Live wakes the free backend in ~40 s) |
+| Demo video (3 min) | https://youtu.be/kYjsGkdXRJw |
+| Live dashboard | https://glass-wall-ai.vercel.app (replays work instantly; live runs use a free backend that's kept awake) |
 | MCP endpoint for any agent | `https://glass-wall-ai.onrender.com/mcp/wall` |
 | Design spec | [`docs/SPEC.md`](docs/SPEC.md) |
 
