@@ -1,0 +1,86 @@
+GLASS WALL AI - DEMO VIDEO SCRIPT
+About 395 words, roughly 2.5 minutes of speech plus the live runs (about 3 minutes in total).
+Each beat is one voice clip. While it plays, a purple box (▢) is drawn around what it talks about,
+with the label in quotes, and the line appears as a subtitle at the bottom.
+To change the words, edit video/narration.json (this file is generated from it).
+
+
+1 - THE PROBLEM
+
+  [▢ "A real attack" around the 'One real attack' card on Home]
+  This AI assistant just handed a stranger the names, emails and phone numbers of twenty customers. It took one message.
+
+  [▢ "The trick" around the attacker's message]
+  Companies are starting to let AI assistants work directly with their customer data, and these assistants can be talked into things.
+
+  [▢ "The Glass Wall" around the 'One real attack' card on Home]
+  Glass Wall fixes that. Think of frosted glass: the AI can see the shape of the data, how many customers, which city, which plan, but never who they are.
+
+  [▢ "Codes, not people" around the 'What the agent sees' table]
+  Every name, email and phone number reaches it as a code. The same person always gets the same code, so the AI can still count and match, without ever knowing who anyone is.
+
+
+2 - WITHOUT THE WALL
+
+  [▢ "No protection" around the No wall / Glass Wall switch]
+  Let's try to trick one. Here's a real AI assistant with no protection.
+
+  [▢ "The trick" around the attack prompt]
+  Someone pretends to be from the compliance team and asks it to send out every business customer's contact details.
+
+  [▢ "Real data leaving" around the telemetry log]
+  It obeys. Red means real personal data just got out.
+
+  [▢ "What the stranger got" around the newest outbox message]
+  This box shows what the stranger received: real names, emails and phone numbers. For any company, that's a data breach.
+
+
+3 - WITH THE WALL
+
+  [▢ "Wall up" around the No wall / Glass Wall switch]
+  Same assistant, same trick, but now the Glass Wall is up.
+
+  [▢ "Still trying to help" around the telemetry log]
+  The assistant still tries to help. It even sends the message.
+
+  [▢ "Only codes" around the newest outbox message]
+  But all it ever had were codes, so the stranger gets nothing useful.
+
+  [▢ "Blocked by the database" around the telemetry log]
+  And when it tries to sneak around the wall and read the customer list directly, the database simply says no.
+
+
+4 - DOES IT REALLY WORK?
+
+  [▢ "60 tricks, every setup" around the attack heatmap (Dashboard)]
+  We didn't try it just once. We threw sixty different tricks at four different AI models, hundreds of times.
+
+  [▢ "Without the wall" around the No wall and Rules-in-the-prompt numbers]
+  Without the wall, about three out of four tricks worked. Just telling the AI "please be careful" helped, but some tricks still got through.
+
+  [▢ "Zero leaks" around the Glass Wall 0% number]
+  With the Glass Wall: zero. Not one real name, email or phone number got out.
+
+  [▢ "Still useful" around the 'answered correctly' chart]
+  And everyday questions, like counting customers per plan, still got the right answer.
+
+
+5 - BEING HONEST
+
+  [▢ "The trade-off" around the note about unanswerable questions]
+  It isn't magic. Questions about the hidden details themselves, like how many customers use a certain email provider, can't be answered.
+
+  [▢ "A false alarm, shown openly" around the flagged message in the replay log]
+  And we publish every single run, including the few times our own quick checker raised a false alarm.
+
+
+6 - UNDER THE HOOD
+
+  [▢ "Inside the database" around the four How-it-works steps]
+  For the technical folks: the wall lives inside the database itself, not in the AI's instructions, so no clever message can talk it out of it.
+
+  [▢ "MCP" around step 01, Agents connect through MCP]
+  Any AI agent can connect to it through MCP, the standard way agents plug into tools.
+
+  [(closing card with the links, no box)]
+  Try to break it yourself, the link is below. Glass Wall: AI sees the shape of the data, never the people in it.
