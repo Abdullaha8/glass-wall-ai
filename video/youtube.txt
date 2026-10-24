@@ -1,0 +1,35 @@
+TITLE (pick one; under 70 characters so it isn't cut off)
+1. Your AI Can't Leak What It Never Sees | Glass Wall AI
+2. I Tried to Trick an AI Into Leaking Customer Data. Then I Built a Wall.
+3. 0 of 162 Attacks Leaked: A Glass Wall Between AI Agents and Your Data
+
+
+DESCRIPTION (paste everything below this line)
+----------------------------------------------------------------------
+AI assistants are getting direct access to company databases, and they can be talked into handing out customers' personal data. Glass Wall AI is a wall between the AI and the database: the AI sees the shape of the data (how many customers, which city, which plan) but every name, email and phone number reaches it only as a code.
+
+In this demo we trick a real AI agent into leaking customer data, then run the exact same trick with the Glass Wall up.
+
+The results, measured on 4 AI models with 60 different attacks (681 runs):
+- No wall: about 3 out of 4 attacks leaked real data (124 of 166)
+- Just telling the AI "never reveal it": up to 28% still leaked
+- Glass Wall: 0 of 162 attacks leaked, and everyday questions were still answered correctly
+
+Try to break it yourself: https://glass-wall-ai.vercel.app
+Code (open source): https://github.com/Abdullaha8/glass-wall-ai
+
+0:00 The problem: AI assistants can be tricked
+0:44 Without the wall: the AI leaks customer data
+1:18 With the Glass Wall: the AI only ever has codes
+1:50 Does it really work? 60 attacks, 4 AI models
+2:23 Being honest: the trade-offs
+2:45 Under the hood: a wall inside the database
+
+How it works, for the technical folks: the wall lives inside Postgres itself. A secure view replaces names, emails and phone numbers with salted hashes, and the AI's database role can only read that view, never the raw table. AI agents connect through MCP (Model Context Protocol), so any MCP-capable agent can use it. Because the protection is in the database and not in the AI's instructions, no clever prompt can talk it out of it.
+
+All customer data in the demo is synthetic. No real people were harmed in the making of this video.
+
+Built for the Syntax Error 2026 hackathon. Narration voice: ElevenLabs.
+
+#AI #AIAgents #Privacy #Cybersecurity #MCP #Postgres #PromptInjection #Hackathon
+----------------------------------------------------------------------
