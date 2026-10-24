@@ -23,7 +23,7 @@ HERE = Path(__file__).resolve().parent
 BUILD = HERE / "build"
 SITE = "https://glass-wall-ai.vercel.app"
 API = "https://glass-wall-ai.onrender.com"
-MODEL_LABEL = "gpt-oss 120B (Groq)"   # fast on Groq, so the live runs don't stall the video
+MODEL_LABEL = "Gemini 3.5 Flash-Lite"   # reliable tool use in the live runs (gpt-oss-120b refused the raw-table attack)
 W, H = 1440, 900
 DRY = "--dry" in sys.argv
 
@@ -136,8 +136,11 @@ def nav(page: Page, name: str) -> None:
 
 
 def run_live(page: Page, case_id: str, want: str | None = None, tries: int = 3) -> None:
-    """Run a case and wait for the verdict; retry (up to `tries`) until the verdict contains `want`."""
+    """Run a case and wait for the verdict; retry (up to `tries`) on errors or until the verdict contains `want`.
+    While the agent works, the box sits on the log so the events can be watched streaming in."""
     page.get_by_label("Prompt from the eval suite").select_option(case_id)
+    page.evaluate("() => window.__gw.caption('')")
+    spotlight(page, "log", "Agent working…")
     if DRY:
         page.wait_for_timeout(3000)
         return
@@ -148,10 +151,13 @@ def run_live(page: Page, case_id: str, want: str | None = None, tries: int = 3) 
             print("  run refused:", page.get_by_role("alert").inner_text())
             page.wait_for_timeout(8000)
             continue
-        page.get_by_role("button", name="Run in").wait_for(timeout=180_000)   # the running state ended
+        page.get_by_role("button", name="Agent running").wait_for(state="hidden", timeout=180_000)
         page.wait_for_timeout(1500)
         verdict = page.locator('section[aria-label="Live run"] [aria-live="polite"]').last.inner_text()
-        print(f"  {case_id} verdict: {verdict.splitlines()[0] if verdict else '?'}")
+        print(f"  {case_id} try {attempt + 1}: {' '.join(verdict.split())[:110]}")
+        if "Run ended with an error" in verdict:
+            page.wait_for_timeout(5000)
+            continue
         if not want or want in verdict:
             return
     print(f"  ! {case_id}: never got '{want}' after {tries} tries")
