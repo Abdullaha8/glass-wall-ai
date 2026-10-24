@@ -12,6 +12,7 @@ async function json<T>(res: Response): Promise<T> {
 
 // ---- Replay: static files bundled with the site ----------------------------
 export const loadLatest = () => fetch("/results/latest.json").then((r) => json<Latest>(r));
+export const loadCases = () => fetch("/results/cases.json").then((r) => json<CaseInfo[]>(r));
 
 export const loadReplayEvents = async (): Promise<TelemetryEvent[]> => {
   const res = await fetch("/results/events_sample.jsonl");

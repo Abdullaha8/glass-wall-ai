@@ -164,6 +164,7 @@ def main(batch: str) -> None:
         },
     }
     (OUT / "latest.json").write_text(json.dumps(latest, indent=2, default=str), encoding="utf-8")
+    write_cases()
 
     featured = [r["run_id"] for r in rows if r["case_id"] in FEATURED and r["trial"] == 1]
     events = admin.execute("SELECT event FROM audit.events WHERE run_id = ANY(%s) ORDER BY id", (featured,)).fetchall()
@@ -197,6 +198,12 @@ def main(batch: str) -> None:
     print(f"wrote results/latest.json ({len(rows)} runs, {len(models)} models) "
           f"and results/events_sample.jsonl ({len(events)} events)")
     admin.close()
+
+
+def write_cases() -> None:
+    """The live demo's prompt list, shipped with the site so it shows before the backend wakes up."""
+    from .live import CASES
+    (OUT / "cases.json").write_text(json.dumps(list(CASES.values()), indent=1, ensure_ascii=False), encoding="utf-8")
 
 
 if __name__ == "__main__":

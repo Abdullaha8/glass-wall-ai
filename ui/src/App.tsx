@@ -64,6 +64,8 @@ export default function App() {
       if (!d.models.includes(MAIN_MODEL)) setReplayModel(d.models[0]);
     }).catch(() => setLatest(null));
     api.loadReplayEvents().then(setReplayEvents);
+    // the prompt list ships with the site, so the live demo isn't empty while the backend wakes up
+    api.loadCases().then((c) => setCases((cur) => (cur.length ? cur : c))).catch(() => {});
     api.loadReplayOutbox().then(setReplayOutbox);
   }, []);
 
