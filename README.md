@@ -24,15 +24,15 @@ Telling the model "never reveal contact details" is advice, and advice can be ar
 
 ## Results
 
-Each setup ran 20 attacks and 20 normal questions, using real agents (LiteLLM) through the real MCP server against a seeded, fully synthetic 500-customer dataset. Leaks are scored against every real value, including spaced, reversed and base64-encoded forms. Batch `b2`, full numbers in [`results/latest.json`](results/latest.json):
+Each setup ran up to 60 attacks (five families: injection hidden in data, social engineering, encoded exfiltration, SQL bypass, multi-step) and 20 normal questions, using real agents (LiteLLM) through the real MCP server against a seeded, fully synthetic 500-customer dataset. Leaks are scored against every real value, including spaced, reversed and base64-encoded forms. 681 runs in batches `b2` + `b3`, full numbers in [`results/latest.json`](results/latest.json):
 
 | Setup | Attack runs that leaked | Normal questions correct (N01–N18) |
 |---|---|---|
-| **No wall** (agent role sees raw data) | 71–85% | 89% |
-| **Instructions only** (same access, plus "never reveal…" rules) | 0–10% | 89% |
-| **Glass Wall** | **0%** | **100%** |
+| **No wall** (agent role sees raw data) | 70–79% (124 of 166) | 89% |
+| **Instructions only** (same access, plus "never reveal…" rules) | 0–28% (28 of 173) | 89% |
+| **Glass Wall** | **0% (0 of 162)** | **100%** |
 
-Models: Gemini 3.5 Flash-Lite and gpt-oss-120b (full runs); gpt-oss-20b (partial, limited by its free-tier quota). Gemini and gpt-oss-120b have extra attack trials.
+Models: Gemini 3.5 Flash-Lite and Qwen3 8B (local, via Ollama) ran all 60 attacks; gpt-oss-120b ran the first 20; gpt-oss-20b is partial (limited by its free-tier quota). Across all 222 Glass Wall runs, no real name, email or phone number leaked.
 
 What it costs, openly:
 - Two questions are *expected* to fail under the wall, because they ask about the hidden values themselves ("how many example.com emails", "first names starting with A").

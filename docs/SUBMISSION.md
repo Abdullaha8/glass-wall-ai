@@ -1,7 +1,7 @@
 # Devfolio submission: Syntax Error 2026
 
 Deadline: Sunday 25 Oct 2026, 09:00 IST. Target: submit by Saturday 23:00 IST.
-Numbers marked ⟨…⟩ are refreshed from `results/latest.json` at the freeze (Saturday ~21:00 IST).
+Numbers are final: 681 runs from `results/latest.json`, frozen Saturday 24 Oct.
 
 ## Project name
 Glass Wall AI
@@ -40,16 +40,16 @@ AI agents are getting direct access to company databases: support bots, ops copi
 
 What you can do with it:
 - **Give any MCP-capable agent safe database access.** Point Claude, Cursor, n8n or your own agent at `/mcp/wall` instead of handing it credentials.
-- **Prove it, don't claim it.** The built-in evaluation runs 20 attacks (prompt injection, social engineering, encoded exfiltration, SQL bypass) and 20 normal questions against three setups and several LLMs, then scores leaks against the real data.
+- **Prove it, don't claim it.** The built-in evaluation runs 60 attacks (prompt injection, social engineering, encoded exfiltration, SQL bypass, multi-step) and 20 normal questions against three setups and four LLMs, then scores leaks against the real data.
 - **Watch it live.** The dashboard streams colour-coded telemetry for every query and message and keeps an outbox showing exactly what an attacker would have received.
 
-Results on our synthetic 500-customer dataset (⟨batch b2⟩):
+Results on our synthetic 500-customer dataset (681 runs, batches b2 + b3):
 
 | Setup | Attacks that leaked | Normal questions correct |
 |---|---|---|
-| No wall | ⟨71–85%⟩ | ⟨89%⟩ |
-| Instructions only ("never reveal contact details") | ⟨0–10%⟩ | ⟨89%⟩ |
-| **Glass Wall** | **⟨0%⟩** | **⟨100%⟩** |
+| No wall | 70–79% (124 of 166) | 89% |
+| Instructions only ("never reveal contact details") | 0–28% (28 of 173) | 89% |
+| **Glass Wall** | **0% (0 of 162)** | **100%** |
 
 What it costs, stated openly: questions about the hidden values themselves (e.g. "how many emails use one domain") can't be answered under the wall, and combinations of unmasked fields (city, plan, spend) could still help re-identify someone. Our claim is "no raw value detected", not "provably none".
 
@@ -61,4 +61,4 @@ What it costs, stated openly: questions about the hidden values themselves (e.g.
 
 **3. Postgres features that would have leaked the salt.** The tokenizer needs a secret salt. Putting it in the view's SQL would expose it, because any role can read view definitions through `pg_views`. Wrapping the hashing in a function would hand the agent a dictionary-attack oracle (`tokenize('email', 'guess@x.com')`), because Postgres checks function permissions against the caller. We wrote the hash inline in a `security_barrier` view that reads the salt from a table only the owner can see. A self-check script proves 21 properties with the Python guard switched off: no access to raw tables, the salt, the audit log or the other agent's view, no `SET ROLE`, no writes.
 
-**4. Free-tier limits everywhere.** Groq gives 200k tokens per model per day, so our evaluation of 360+ agent runs had to be resumable, spread across providers and paced, with a wrapper that waits out quotas. Render's API demanded a card even for the free plan, so we created the service by hand and set everything else through the API, with a guard that refuses any non-free plan.
+**4. Free-tier limits everywhere.** Groq gives 200k tokens per model per day, so our evaluation of 680+ agent runs had to be resumable, spread across providers and paced, with a wrapper that waits out quotas. Render's API demanded a card even for the free plan, so we created the service by hand and set everything else through the API, with a guard that refuses any non-free plan.

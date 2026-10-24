@@ -152,7 +152,7 @@ def cover() -> str:
             f'<text x="543" y="318" {sans} font-size="27" font-weight="500" fill="#dcc2fb">AI agents see your data\'s shape,</text>'
             f'<text x="543" y="354" {sans} font-size="27" font-weight="500" fill="#dcc2fb">never your users.</text>'
             '<g font-family="JetBrains Mono, Consolas, monospace" font-size="20" fill="#a69fb5">'
-            '<text x="543" y="426">No wall    · 71–85% of attacks leaked</text>'
+            '<text x="543" y="426">No wall    · 70–79% of attacks leaked</text>'
             '<text x="543" y="460" fill="#c99ef8">Glass Wall · 0% leaked · 100% correct</text>'
             '<text x="543" y="518" fill="#6e6680">MCP · Postgres · LiteLLM · real agents</text></g>')
     return svg(1200, 630, '<rect width="1200" height="630" fill="url(#bg)"/>'

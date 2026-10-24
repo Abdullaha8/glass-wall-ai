@@ -20,7 +20,7 @@
     {
       "id": "s4_scoreboard",
       "caption": "20 attacks, 20 normal questions, 3 setups, 3 models.",
-      "text": "We measured it. Twenty attacks and twenty normal questions, across three setups and three models. Without the wall, three out of four attacks or more leaked data. Telling the model to be careful helped, but still leaked up to one attack in ten. With the glass wall, zero. And normal questions, like counting duplicate emails, were still answered correctly."
+      "text": "We measured it. Sixty attacks and twenty normal questions, across three setups and four models. Without the wall, about three out of four attacks leaked data. Telling the model to be careful helped, but one model still leaked more than one attack in four. With the glass wall, zero leaks in a hundred and sixty-two attacks. And normal questions, like counting duplicate emails, were still answered correctly."
     },
     {
       "id": "s5_honest",
