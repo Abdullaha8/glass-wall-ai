@@ -1,6 +1,6 @@
 TITLE (pick one; under 70 characters so it isn't cut off)
 1. Your AI Can't Leak What It Never Sees | Glass Wall AI
-2. I Tried to Trick an AI Into Leaking Customer Data. Then I Built a Wall.
+2. I Tricked an AI Into Leaking Customer Data. Then I Built a Wall.
 3. 0 of 162 Attacks Leaked: A Glass Wall Between AI Agents and Your Data
 
 
