@@ -1,0 +1,94 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@600;800;900&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { width: 1280px; height: 720px; overflow: hidden; background: #050408; font-family: Inter, sans-serif; color: #fff; }
+  .stage { position: relative; width: 1280px; height: 720px; overflow: hidden;
+    background:
+      radial-gradient(ellipse 520px 420px at 640px 470px, rgba(181,119,243,.42), transparent 70%),
+      radial-gradient(ellipse 420px 300px at 120px 560px, rgba(240,122,112,.22), transparent 70%),
+      radial-gradient(ellipse 600px 380px at 1180px 120px, rgba(106,46,163,.45), transparent 70%),
+      #050408; }
+  .grid { position: absolute; inset: 0; opacity: .07;
+    background-image: linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px);
+    background-size: 48px 48px; }
+
+  .brand { position: absolute; left: 56px; top: 44px; display: flex; align-items: center; gap: 14px; }
+  .brand img { width: 58px; height: 58px; border-radius: 50%; box-shadow: 0 0 30px rgba(181,119,243,.6); }
+  .brand span { font: 800 30px Inter; letter-spacing: -.01em; }
+  .brand b { color: #c99ef8; }
+
+  h1 { position: absolute; left: 56px; top: 126px; font: 900 96px/0.98 Inter; letter-spacing: -.045em; text-transform: uppercase; }
+  h1 .l2 { background: linear-gradient(90deg, #f3e6ff, #c99ef8 45%, #9d55e6); -webkit-background-clip: text; color: transparent;
+    filter: drop-shadow(0 0 22px rgba(181,119,243,.55)); }
+
+  /* the data strip: real values | glass | codes */
+  .strip { position: absolute; left: 56px; right: 56px; top: 352px; height: 250px; display: grid;
+    grid-template-columns: 1fr 120px 1fr; align-items: center; }
+  .side { display: flex; flex-direction: column; gap: 14px; }
+  .val { font: 700 31px 'JetBrains Mono', monospace; padding: 10px 18px; border-radius: 14px; white-space: nowrap; width: fit-content; }
+  .real .val { color: #ff8f84; background: rgba(240,122,112,.12); border: 2px solid rgba(240,122,112,.55);
+    text-shadow: 0 0 18px rgba(240,122,112,.6); }
+  .real .tag, .codes .tag { font: 800 20px Inter; letter-spacing: .14em; text-transform: uppercase; margin-bottom: 2px; }
+  .real .tag { color: #ff8f84; }
+  .codes { align-items: flex-end; }
+  .codes .tag { color: #d9b8fb; }
+  .codes .val { color: #ecdafe; background: rgba(181,119,243,.18); border: 2px solid rgba(201,158,248,.7);
+    box-shadow: 0 0 26px rgba(181,119,243,.45); }
+  .strike { position: relative; }
+  .strike::after { content: ""; position: absolute; left: -6px; right: -6px; top: 50%; height: 4px; border-radius: 2px;
+    background: #ff6b5e; transform: rotate(-4deg); box-shadow: 0 0 10px rgba(255,107,94,.8); }
+
+  .pane { position: relative; height: 270px; justify-self: center; width: 34px; border-radius: 17px;
+    background: linear-gradient(180deg, rgba(236,218,254,.95), rgba(255,255,255,.55) 35%, rgba(201,158,248,.9) 70%, rgba(157,85,230,.95));
+    border: 2px solid rgba(255,255,255,.85);
+    box-shadow: 0 0 40px rgba(181,119,243,1), 0 0 110px rgba(181,119,243,.8), inset 0 0 14px rgba(255,255,255,.9); }
+  .pane::before, .pane::after { content: ""; position: absolute; left: 50%; width: 140px; height: 3px; transform: translateX(-50%) rotate(-28deg);
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,.9), transparent); }
+  .pane::before { top: 34%; } .pane::after { top: 62%; }
+  .arrow { position: absolute; top: 50%; font: 900 40px Inter; color: rgba(255,255,255,.75); transform: translateY(-50%); }
+
+  .stat { position: absolute; left: 50%; transform: translateX(-50%); bottom: 30px; text-align: center; padding: 10px 30px 12px; border-radius: 22px;
+    display: flex; align-items: baseline; gap: 16px; white-space: nowrap; z-index: 2;
+    background: linear-gradient(160deg, rgba(42,20,66,.95), rgba(14,9,22,.95)); border: 2px solid rgba(201,158,248,.75);
+    box-shadow: 0 0 50px rgba(181,119,243,.55); }
+  .stat .n { font: 900 70px/1 Inter; letter-spacing: -.04em; }
+  .stat .n small { font-size: 42px; color: #c99ef8; }
+  .stat .t { font: 800 26px Inter; letter-spacing: .1em; text-transform: uppercase; color: #ecdafe; }
+
+  .foot { position: absolute; left: 56px; bottom: 34px; font: 700 22px Inter; color: #b8adc9; letter-spacing: .02em; }
+  .foot b { color: #fff; }
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="grid"></div>
+
+  <div class="brand"><img src="../logo/mark-512.png" alt=""><span>Glass Wall <b>AI</b></span></div>
+
+  <h1>Your AI can't leak<br><span class="l2">what it never sees.</span></h1>
+
+  <div class="stat"><div class="n">0<small> / 162</small></div><div class="t">attacks leaked</div></div>
+
+  <div class="strip">
+    <div class="side real">
+      <div class="tag">Real customer data</div>
+      <div class="val">Rushil Saini</div>
+      <div class="val">rushil.saini@example.com</div>
+      <div class="val">555 447 9144</div>
+    </div>
+    <div class="pane"></div>
+    <div class="side codes">
+      <div class="tag">What the AI sees</div>
+      <div class="val">tok_8e3f6e93</div>
+      <div class="val">tok_3f9183c1</div>
+      <div class="val">tok_a26f736c</div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
