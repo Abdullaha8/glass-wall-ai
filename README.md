@@ -1,5 +1,7 @@
 # Glass Wall AI
 
+[![CI](https://github.com/Abdullaha8/glass-wall-ai/actions/workflows/ci.yml/badge.svg)](https://github.com/Abdullaha8/glass-wall-ai/actions/workflows/ci.yml)
+
 ![Glass Wall AI](assets/logo/lockup.png)
 
 **AI agents see your data's shape, never your users.**
